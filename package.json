@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "npx esbuild src/app/sw.ts --bundle --outfile=public/sw.js --minify --platform=browser && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",
