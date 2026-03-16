@@ -1,39 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
   try {
-    const { pin } = await req.json();
+    const { name, pin } = await req.json();
 
-    if (!pin || pin.length !== 6 || !/^\d+$/.test(pin)) {
+    if (!name || !pin) {
       return NextResponse.json(
-        { success: false, error: "PIN 6 digit wajib diisi" },
-        { status: 400 }
+        { success: false, error: "Nama dan PIN wajib diisi" },
+        { status: 400 },
       );
     }
 
-    const user = await db.user.findUnique({
-      where: { pin },
+    // 1. Cari user berdasarkan nama (Case-insensitive)
+    const user = await db.user.findFirst({
+      where: {
+        name: { equals: name.trim(), mode: "insensitive" },
+      },
     });
 
+    // 2. Jika nama tidak ada di database
     if (!user) {
       return NextResponse.json(
-        { success: false, error: "PIN salah atau tidak ditemukan" },
-        { status: 401 }
+        { success: false, error: "Nama tidak ditemukan di sistem." },
+        { status: 404 },
+      );
+    }
+
+    // 3. Jika nama ada, cek apakah PIN-nya cocok menggunakan bcrypt
+    const isPinValid = await bcrypt.compare(pin, user.pin);
+    if (!isPinValid) {
+      return NextResponse.json(
+        { success: false, error: "PIN yang Anda masukkan salah." },
+        { status: 401 }, // 401 Unauthorized
       );
     }
 
     if (!user.isApproved) {
       return NextResponse.json(
-        { success: false, error: "Akun Anda belum disetujui. Silakan tunggu persetujuan." },
-        { status: 403 }
+        {
+          success: false,
+          error: "Akun Anda belum disetujui. Silakan tunggu persetujuan.",
+        },
+        { status: 403 },
       );
     }
 
     // Create session cookie
     const response = NextResponse.json(
       { success: true, message: "Login berhasil", name: user.name },
-      { status: 200 }
+      { status: 200 },
     );
 
     // Set secure HTTP-Only cookie for simple authentication
@@ -41,7 +58,7 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24, // 1 day
       path: "/",
     });
 
@@ -50,7 +67,7 @@ export async function POST(req: NextRequest) {
     console.error("[POST /api/auth/login] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal memulai sesi login" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

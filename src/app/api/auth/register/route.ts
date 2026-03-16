@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import bcrypt from "bcryptjs"; // Pastikan sudah install bcryptjs
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,40 +8,52 @@ export async function POST(req: NextRequest) {
 
     if (!name || !pin || pin.length !== 6 || !/^\d+$/.test(pin)) {
       return NextResponse.json(
-        { success: false, error: "Nama dan PIN 6 digit yang valid wajib diisi" },
-        { status: 400 }
+        { success: false, error: "Nama dan PIN 6 digit angka wajib diisi" },
+        { status: 400 },
       );
     }
 
-    // Check if PIN already exists
-    const existingUser = await db.user.findUnique({
-      where: { pin },
+    // Gunakan findFirst karena 'name' bukan @unique di schema
+    const existingUser = await db.user.findFirst({
+      where: {
+        name: { equals: name.trim(), mode: "insensitive" }, // Abaikan huruf besar/kecil
+      },
     });
 
     if (existingUser) {
       return NextResponse.json(
-        { success: false, error: "PIN sudah digunakan. Silakan gunakan PIN lain." },
-        { status: 400 }
+        {
+          success: false,
+          error: "Nama ini sudah terdaftar. Silakan gunakan nama lain.",
+        },
+        { status: 400 },
       );
     }
 
-    const newUser = await db.user.create({
+    // Hash PIN sebelum disimpan
+    const salt = await bcrypt.genSalt(10);
+    const hashedPin = await bcrypt.hash(pin, salt);
+
+    await db.user.create({
       data: {
-        name,
-        pin,
-        isApproved: false, // Default: butuh persetujuan manual
+        name: name.trim(),
+        pin: hashedPin, // Simpan hasil hash, bukan plaintext
+        isApproved: false,
       },
     });
 
     return NextResponse.json(
-      { success: true, message: "Pendaftaran berhasil. Silakan tunggu persetujuan admin." },
-      { status: 201 }
+      {
+        success: true,
+        message: "Pendaftaran berhasil. Tunggu persetujuan admin.",
+      },
+      { status: 201 },
     );
   } catch (error) {
     console.error("[POST /api/auth/register] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mendaftarkan pengguna" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

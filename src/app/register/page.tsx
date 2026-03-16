@@ -57,17 +57,26 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center p-4 bg-zinc-50 dark:bg-zinc-950">
       <div className="w-full max-w-sm space-y-8 bg-white dark:bg-zinc-900 p-8 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800">
         <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Daftar Akun</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">Buat 6-digit PIN untuk keamanan.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            Daftar Akun
+          </h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            Buat akun baru untuk mulai mengelola keuangan Anda dengan Tempest.
+          </p>
         </div>
 
         <form onSubmit={handleRegister} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Nama Lengkap</label>
+              <label
+                htmlFor="name"
+                className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                User Name
+              </label>
               <Input
                 id="name"
-                placeholder="Misal: Budi Santoso"
+                placeholder="Misal: Jhon Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="h-12 rounded-xl border-zinc-200 focus:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-950"
@@ -75,7 +84,12 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="pin" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Buat PIN (6 Angka)</label>
+              <label
+                htmlFor="pin"
+                className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                Buat Kode Akses
+              </label>
               <Input
                 id="pin"
                 type="password"
@@ -94,12 +108,19 @@ export default function RegisterPage() {
             disabled={isSubmitting || pin.length !== 6 || !name.trim()}
             className="w-full h-12 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition-all"
           >
-            {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Daftar Sekarang"}
+            {isSubmitting ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              "Daftar Sekarang"
+            )}
           </Button>
 
           <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
             Sudah punya akun?{" "}
-            <Link href="/login" className="font-semibold text-emerald-500 hover:underline">
+            <Link
+              href="/login"
+              className="font-semibold text-emerald-500 hover:underline"
+            >
               Masuk
             </Link>
           </p>
