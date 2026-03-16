@@ -1,65 +1,129 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import useSWR from "swr";
+import { formatCurrency, formatRelativeDate, getTransactionColor, getTransactionSign } from "@/lib/utils";
+import { TransactionForm } from "@/components/transaction-form";
+import type { AccountData, TransactionData } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Receipt, AlertCircle, ArrowRightLeft } from "lucide-react";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+export default function Dashboard() {
+  const { data: accountsRes, isLoading: accountsLoading } = useSWR<{ data: AccountData[] }>("/api/accounts", fetcher);
+  const { data: txRes, isLoading: txLoading, mutate } = useSWR<{ data: TransactionData[] }>("/api/transactions?limit=10", fetcher);
+
+  const accounts = accountsRes?.data || [];
+  const transactions = txRes?.data || [];
+
+  const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+
+  const handleTransactionSuccess = () => {
+    // Re-fetch data instantly when a new transaction is made
+    mutate();
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex flex-col gap-6 p-6 pt-10 pb-32">
+      {/* Header section (Total Balance) */}
+      <header className="space-y-2">
+        <h2 className="text-sm font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Total Saldo</h2>
+        {accountsLoading ? (
+          <Skeleton className="h-12 w-48 rounded-lg" />
+        ) : (
+          <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {formatCurrency(totalBalance)}
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+        )}
+      </header>
+
+      {/* Accounts Horizontal Scroll */}
+      <section className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+        {accountsLoading ? (
+          [1, 2].map((i) => <Skeleton key={i} className="h-32 w-48 min-w-[192px] rounded-2xl flex-shrink-0" />)
+        ) : accounts.length === 0 ? (
+          <div className="flex h-32 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
+            <AlertCircle className="h-6 w-6 text-zinc-400 mb-2" />
+            <p className="text-sm text-zinc-500">Belum ada akun</p>
+          </div>
+        ) : (
+          accounts.map((acc) => (
+            <div
+              key={acc.id}
+              className="flex h-32 min-w-[192px] flex-col justify-between rounded-2xl bg-zinc-900 p-5 shadow-md snap-center dark:bg-zinc-800"
+              style={{ backgroundColor: acc.color ? `${acc.color}20` : undefined, border: acc.color ? `1px solid ${acc.color}40` : undefined }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{acc.icon || "💳"}</span>
+                <span className="font-semibold text-white/90 truncate">{acc.name}</span>
+              </div>
+              <div className="flex flex-col mt-auto gap-1">
+                <span className="text-xl font-bold tracking-tight text-white">
+                  {formatCurrency(acc.balance)}
+                </span>
+                {acc.uangGoib > 0 && (
+                  <span className="text-[12px] font-bold text-red-400 bg-red-950/40 px-2 py-0.5 rounded-full w-max">
+                    Uang goib: {formatCurrency(acc.uangGoib)}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </section>
+
+      {/* Recent Transactions */}
+      <section className="mt-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Riwayat Terakhir</h3>
+          <span className="text-sm text-emerald-500 font-medium">Lihat Semua</span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="flex flex-col gap-3">
+          {txLoading ? (
+            [1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)
+          ) : transactions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center bg-zinc-50 rounded-2xl dark:bg-zinc-900/50">
+              <Receipt className="h-12 w-12 text-zinc-300 mb-3" />
+              <p className="text-zinc-500 font-medium">Belum ada transaksi</p>
+              <p className="text-sm text-zinc-400">Tekan tombol (+) untuk mulai</p>
+            </div>
+          ) : (
+            transactions.map((tx) => (
+              <div key={tx.id} className="flex items-center justify-between p-4 rounded-2xl bg-white shadow-sm border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-2xl">
+                    {tx.type === "TRANSFER" ? <ArrowRightLeft className="h-5 w-5 text-blue-500" /> : tx.category?.icon || "💵"}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                      {tx.type === "TRANSFER" ? "Transfer Saldo" : tx.category?.name || "Tanpa Kategori"}
+                    </span>
+                    <span className="text-xs font-medium text-zinc-500">
+                      {tx.account?.name} {tx.toAccount ? `→ ${tx.toAccount.name}` : ""} • {formatRelativeDate(tx.date)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-end gap-1">
+                  <span className={`font-bold tracking-tight ${getTransactionColor(tx.type)}`}>
+                    {getTransactionSign(tx.type)} {formatCurrency(tx.amount)}
+                  </span>
+                  {/* Status Indicator (⏳ pending vs ✅ synced) */}
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-800">
+                    {tx.isSynced ? "✅ Synced" : "⏳ Pending"}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      </main>
+      </section>
+
+      {/* Floating Action Button Setup */}
+      <div className="fixed bottom-24 right-6 z-50 md:bottom-10">
+        <TransactionForm onSuccess={handleTransactionSuccess} />
+      </div>
     </div>
   );
 }

@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌩️ Tempest Finance PWA
 
-## Getting Started
+> **High-Performance Offline-First Personal Finance Tracker**
 
-First, run the development server:
+Tempest Finance adalah aplikasi manajemen keuangan pribadi modern yang dirancang untuk kecepatan input instan dan ketahanan offline. Dibangun menggunakan teknologi teratas untuk memberikan pengalaman pengguna yang mulus (smooth) seperti aplikasi native.
 
+---
+
+## ✨ Fitur Utama
+
+- 🔒 **Autentikasi Aman**: Masuk menggunakan sistem PIN 6-Digit yang cepat dan aman.
+- 🏦 **Manajemen Multi-Akun**: Kelola saldo di berbagai dompet (Bank, E-Wallet, Dompet Tunai) secara terpusat.
+- 👻 **Uang Goib (Defisit Tracker)**: Fitur pintar pencatatan saldo minus/bon agar sistem tidak crash. Otomatis "dibayar" saat ada pemasukan!
+- 🏷️ **Kategori Dinamis**: Kelola kategori Pendapatan (Income) dan Pengeluaran (Expense) dengan visualisasi ikon/warna.
+- ⚡ **Instant-Save Core**: Menulis transaksi dalam hitungan milidetik. Tidak ada loading yang menghambat input keuangan Anda.
+- 🔄 **Transfer Atomik**: Pindahkan dana antar akun dengan dukungan pencatatan biaya admin dalam satu transaksi aman.
+- 📱 **Progressive Web App (PWA)**: Dapat diinstal di Android/iOS, mendukung caching offline untuk akses tanpa hambatan kapan saja.
+
+---
+
+## 🛠️ Tech Stack
+
+Aplikasi ini menggunakan teknologi modern dengan efisiensi performa tinggi:
+
+| Komponen | Teknologi |
+| :--- | :--- |
+| **Framework** | [Next.js](https://nextjs.org/) (App Router) |
+| **Styling** | [Tailwind CSS](https://tailwindcss.com/) + [Shadcn UI](https://ui.shadcn.com/) |
+| **Database ORM** | [Prisma](https://www.prisma.io/) |
+| **Database** | PostgreSQL |
+| **PWA Engine** | [Serwist](https://serwist.pages.dev/) |
+| **Notification** | [Sonner](https://sonner.stevenly.me/) |
+
+---
+
+## 🚀 Memulai (Local Setup)
+
+### 1. Prasyarat
+Pastikan Anda sudah menginstal:
+- [Node.js](https://nodejs.org/) (v18+)
+- [pnpm](https://pnpm.io/) (rekomendasi) atau `npm`
+
+### 2. Kloning & Install
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Install dependensi
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Konfigurasi Environment
+Buat file **`.env`** di root directory dan sesuaikan konfigurasinya:
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/finance_db"
+# Tambahkan variable lain jika diperlukan (misal: Google Sheets API Creds jika aktif)
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Database Setup
+Sinkronkan schema database Anda:
+```bash
+npx prisma db push
+# Atau jika menggunakan migrasi:
+# npx prisma migrate dev --name init
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 5. Jalankan Aplikasi
+```bash
+pnpm dev
+```
+Buka [http://localhost:3000](http://localhost:3000) di browser Anda.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📱 PWA Support
+Aplikasi ini sudah mendukung PWA. Di browser Google Chrome / Safari, Anda akan melihat tombol **"Install"** untuk memasang aplikasi ini langsung di layar utama (Desktop/Mobile) layaknya aplikasi PlayStore/AppStore.
