@@ -37,8 +37,8 @@ export default function LoginPage() {
 
       if (data.success) {
         toast.success(`Selamat datang, ${data.name}!`);
-        // window.location.href = "/";
-        router.push("/");
+        window.location.href = "/";
+        // router.push("/");
       } else {
         toast.error(data.error || "Gagal masuk");
         setPin(""); // Clear pin on failure

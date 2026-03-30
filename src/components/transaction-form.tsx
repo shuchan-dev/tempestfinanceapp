@@ -50,7 +50,7 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
   // Fetch reference data (fetcher diambil dari SWRProvider — tidak ada request duplikat)
   const { mutate } = useSWRConfig();
   const { data: accountsRes } = useSWR<{ data: AccountData[] }>("/api/accounts");
-  const { data: categoriesRes } = useSWR<{ data: CategoryData[] }>(`/api/categories?type=${type}`);
+  const { data: categoriesRes } = useSWR<{ data: CategoryData[] }>(`/api/categories?type=${type}&nested=true`);
 
   const accounts = accountsRes?.data || [];
   const categories = categoriesRes?.data || [];
@@ -62,7 +62,12 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
 
   useEffect(() => {
     if (categories.length > 0 && !categoryId && type !== "TRANSFER") {
-      setCategoryId(categories[0].id);
+      const firstCat = categories[0];
+      if (firstCat.children && firstCat.children.length > 0) {
+        setCategoryId(firstCat.children[0].id);
+      } else {
+        setCategoryId(firstCat.id);
+      }
     }
   }, [categories, categoryId, type]);
 
@@ -274,7 +279,7 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
             <span className="text-zinc-400 absolute left-4 text-2xl font-light">Rp</span>
             <input
               type="text"
-              inputMode="numeric"
+              inputMode="text"
               value={amount}
               onChange={handleAmountChange}
               placeholder="0"
@@ -349,11 +354,24 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
                   className="w-full rounded-xl border-zinc-200 bg-white p-3 text-sm shadow-sm focus:ring-2 focus:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-900"
                 >
                   <option value="" disabled>Pilih Kategori...</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.icon} {c.name}
-                    </option>
-                  ))}
+                  {categories.map((c) => {
+                    if (c.children && c.children.length > 0) {
+                      return (
+                        <optgroup key={c.id} label={`${c.icon || ""} ${c.name}`}>
+                          {c.children.map(child => (
+                            <option key={child.id} value={child.id}>
+                              {child.icon ? `${child.icon} ` : ""}{child.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )
+                    }
+                    return (
+                      <option key={c.id} value={c.id}>
+                        {c.icon ? `${c.icon} ` : ""}{c.name}
+                      </option>
+                    )
+                  })}
                 </select>
               </div>
             )}

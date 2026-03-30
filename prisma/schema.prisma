@@ -16,93 +16,131 @@ datasource db {
 // ============================================================
 model User {
   id         String   @id @default(cuid())
-  name       String // Nama pengguna
-  pin        String   @unique // PIN 6 digit untuk login
-  isApproved Boolean  @default(false) // Default false, harus diubah manual ke true untuk bisa masuk
+  name       String
+  pin        String   @unique
+  isApproved Boolean  @default(false)
   createdAt  DateTime @default(now())
 
   // ─── Relasi balik: data milik user ini ───────────────────
   accounts     Account[]
   categories   Category[]
   transactions Transaction[]
+  budgets      Budget[]
+  debts        Debt[]
 }
 
 // ============================================================
 // MODEL ACCOUNT — Mewakili setiap akun keuangan pengguna
-// Contoh: BCA, Gopay, Dompet Tunai
 // ============================================================
 model Account {
   id        String   @id @default(cuid())
-  name      String // Nama akun, contoh: "BCA", "Gopay"
-  balance   Float    @default(0) // Saldo saat ini
-  uangGoib  Float    @default(0) // Uang minus/bon/utang tak terlihat
-  icon      String? // Emoji icon opsional
-  color     String? // Warna hex untuk badge warna di UI
+  name      String
+  balance   Float    @default(0)
+  uangGoib  Float    @default(0)
+  icon      String?
+  color     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // ─── Relasi ke User (isolasi data per pengguna) ──────────
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Transaksi reguler (INCOME/EXPENSE) dan transaksi asal TRANSFER
   transactions Transaction[] @relation("AccountTransactions")
-
-  // Transaksi TRANSFER yang masuk ke akun ini (akun tujuan)
-  transfersIn Transaction[] @relation("TransferTo")
+  transfersIn  Transaction[]  @relation("TransferTo")
 }
 
 // ============================================================
-// MODEL CATEGORY — Klasifikasi transaksi
-// Contoh: Makanan (EXPENSE), Gaji (INCOME)
+// MODEL CATEGORY — Klasifikasi transaksi (mendukung Parent/Child)
+// Contoh: Makan (Parent) → Kopi, Snack (Children)
 // ============================================================
 model Category {
-  id   String  @id @default(cuid())
-  name String // Nama kategori, contoh: "Makanan"
-  type String // "INCOME" atau "EXPENSE"
-  icon String? // Emoji icon opsional untuk UI
+  id    String  @id @default(cuid())
+  name  String
+  type  String  // "INCOME" atau "EXPENSE"
+  icon  String?
+  order Int     @default(0) // Urutan tampil di UI
 
-  // ─── Relasi ke User (isolasi data per pengguna) ──────────
+  // ─── Self-relation: Parent → Children ────────────────────
+  // parentId null = kategori root/parent
+  parentId String?
+  parent   Category?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("SubCategories")
+
+  // ─── Relasi ke User ──────────────────────────────────────
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Semua transaksi yang masuk ke kategori ini
   transactions Transaction[]
+  budgets      Budget[]
 }
 
 // ============================================================
 // MODEL TRANSACTION — Data inti setiap transaksi keuangan
-// Mendukung tipe: INCOME, EXPENSE, TRANSFER
 // ============================================================
 model Transaction {
   id          String   @id @default(cuid())
-  amount      Float // Nominal transaksi (selalu positif)
-  type        String // "INCOME" | "EXPENSE" | "TRANSFER"
-  description String? // Catatan opsional dari pengguna
-  date        DateTime @default(now()) // Tanggal transaksi
+  amount      Float
+  type        String   // "INCOME" | "EXPENSE" | "TRANSFER"
+  description String?
+  date        DateTime @default(now())
   createdAt   DateTime @default(now())
+  isSynced    Boolean  @default(false)
 
-  // Menandai apakah data sudah terupload ke Google Sheets
-  // false = pending sync, true = sudah sinkron
-  isSynced Boolean @default(false)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // ─── Relasi ke User (isolasi data per pengguna) ──────────
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // ─── Akun Asal (wajib untuk semua tipe transaksi) ────────
   accountId String
   account   Account @relation("AccountTransactions", fields: [accountId], references: [id])
 
-  // ─── Kategori (opsional — TRANSFER tidak perlu kategori) ──
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id])
 
-  // ─── Field khusus TRANSFER ────────────────────────────────
-  // toAccountId: ID akun tujuan (diisi hanya saat type = "TRANSFER")
   toAccountId String?
   toAccount   Account? @relation("TransferTo", fields: [toAccountId], references: [id])
 
-  // adminFee: biaya transfer yang dibebankan ke akun asal
   adminFee Float? @default(0)
+}
+
+// ============================================================
+// MODEL BUDGET — Batas pengeluaran per kategori per periode
+// Contoh: Makan max Rp 2.000.000 / bulan
+// ============================================================
+model Budget {
+  id     String @id @default(cuid())
+  amount Float  // Batas maksimal
+  period String @default("MONTHLY") // "MONTHLY" | "WEEKLY"
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Satu budget per user per kategori per periode
+  @@unique([userId, categoryId, period])
+}
+
+// ============================================================
+// MODEL DEBT — Pencatat Hutang & Piutang
+// HUTANG = kita yang berhutang ke orang lain
+// PIUTANG = orang lain yang berhutang ke kita
+// ============================================================
+model Debt {
+  id          String    @id @default(cuid())
+  type        String    // "HUTANG" | "PIUTANG"
+  personName  String    // Nama orang yang terlibat
+  amount      Float     // Nominal
+  description String?   // Catatan opsional
+  dueDate     DateTime? // Jatuh tempo opsional
+  isPaid      Boolean   @default(false)
+  paidAt      DateTime? // Kapan dilunasi
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

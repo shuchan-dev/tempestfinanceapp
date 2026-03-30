@@ -387,7 +387,9 @@ export const ModelName = {
   User: 'User',
   Account: 'Account',
   Category: 'Category',
-  Transaction: 'Transaction'
+  Transaction: 'Transaction',
+  Budget: 'Budget',
+  Debt: 'Debt'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -403,7 +405,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "category" | "transaction"
+    modelProps: "user" | "account" | "category" | "transaction" | "budget" | "debt"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -703,6 +705,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Budget: {
+      payload: Prisma.$BudgetPayload<ExtArgs>
+      fields: Prisma.BudgetFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BudgetFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BudgetPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BudgetFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BudgetPayload>
+        }
+        findFirst: {
+          args: Prisma.BudgetFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BudgetPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BudgetFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BudgetPayload>
+        }
+        findMany: {
+          args: Prisma.BudgetFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BudgetPayload>[]
+        }
+        create: {
+          args: Prisma.BudgetCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BudgetPayload>
+        }
+        createMany: {
+          args: Prisma.BudgetCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BudgetCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BudgetPayload>[]
+        }
+        delete: {
+          args: Prisma.BudgetDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BudgetPayload>
+        }
+        update: {
+          args: Prisma.BudgetUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BudgetPayload>
+        }
+        deleteMany: {
+          args: Prisma.BudgetDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BudgetUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BudgetUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BudgetPayload>[]
+        }
+        upsert: {
+          args: Prisma.BudgetUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BudgetPayload>
+        }
+        aggregate: {
+          args: Prisma.BudgetAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBudget>
+        }
+        groupBy: {
+          args: Prisma.BudgetGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BudgetGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BudgetCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BudgetCountAggregateOutputType> | number
+        }
+      }
+    }
+    Debt: {
+      payload: Prisma.$DebtPayload<ExtArgs>
+      fields: Prisma.DebtFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DebtFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DebtPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DebtFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DebtPayload>
+        }
+        findFirst: {
+          args: Prisma.DebtFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DebtPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DebtFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DebtPayload>
+        }
+        findMany: {
+          args: Prisma.DebtFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DebtPayload>[]
+        }
+        create: {
+          args: Prisma.DebtCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DebtPayload>
+        }
+        createMany: {
+          args: Prisma.DebtCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DebtCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DebtPayload>[]
+        }
+        delete: {
+          args: Prisma.DebtDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DebtPayload>
+        }
+        update: {
+          args: Prisma.DebtUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DebtPayload>
+        }
+        deleteMany: {
+          args: Prisma.DebtDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DebtUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DebtUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DebtPayload>[]
+        }
+        upsert: {
+          args: Prisma.DebtUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DebtPayload>
+        }
+        aggregate: {
+          args: Prisma.DebtAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDebt>
+        }
+        groupBy: {
+          args: Prisma.DebtGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DebtGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DebtCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DebtCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -773,6 +923,8 @@ export const CategoryScalarFieldEnum = {
   name: 'name',
   type: 'type',
   icon: 'icon',
+  order: 'order',
+  parentId: 'parentId',
   userId: 'userId'
 } as const
 
@@ -795,6 +947,36 @@ export const TransactionScalarFieldEnum = {
 } as const
 
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
+
+
+export const BudgetScalarFieldEnum = {
+  id: 'id',
+  amount: 'amount',
+  period: 'period',
+  categoryId: 'categoryId',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BudgetScalarFieldEnum = (typeof BudgetScalarFieldEnum)[keyof typeof BudgetScalarFieldEnum]
+
+
+export const DebtScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  personName: 'personName',
+  amount: 'amount',
+  description: 'description',
+  dueDate: 'dueDate',
+  isPaid: 'isPaid',
+  paidAt: 'paidAt',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DebtScalarFieldEnum = (typeof DebtScalarFieldEnum)[keyof typeof DebtScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -988,6 +1170,8 @@ export type GlobalOmitConfig = {
   account?: Prisma.AccountOmit
   category?: Prisma.CategoryOmit
   transaction?: Prisma.TransactionOmit
+  budget?: Prisma.BudgetOmit
+  debt?: Prisma.DebtOmit
 }
 
 /* Types for Logging */

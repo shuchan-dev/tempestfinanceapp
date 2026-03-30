@@ -35,12 +35,22 @@ export async function GET(req: NextRequest): Promise<NextResponse<ApiResponse<Tr
     const page = Math.max(parseInt(searchParams.get("page") ?? "1"), 1);
     const type = searchParams.get("type");
     const accountId = searchParams.get("accountId");
+    const dateFrom = searchParams.get("dateFrom");
+    const dateTo = searchParams.get("dateTo");
 
     const transactions = await db.transaction.findMany({
       where: {
         userId: userId!,
         ...(type && { type }),
         ...(accountId && { accountId }),
+        ...(dateFrom || dateTo
+          ? {
+            date: {
+              ...(dateFrom && { gte: new Date(dateFrom) }),
+              ...(dateTo && { lte: new Date(dateTo) }),
+            },
+          }
+          : {}),
       },
       include: {
         account: { select: { id: true, name: true, icon: true, color: true } },
@@ -116,7 +126,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<T
           accountId: body.accountId,
           categoryId: body.categoryId?.trim() ? body.categoryId : undefined,
           toAccountId: body.toAccountId?.trim() ? body.toAccountId : undefined,
-          adminFee: body.adminFee ?? 0,
+          adminFee: body.adminFee ?? 0, // Admin fee di set 0 karena dicatat sebagai transaksi terpisah 
         },
         include: {
           account: { select: { id: true, name: true, icon: true, color: true } },
@@ -124,6 +134,22 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<T
           toAccount: { select: { id: true, name: true, icon: true, color: true } },
         },
       });
+
+      // 1b. Jika TRANSFER dan ada admin fee, catat sebagai pengeluaran terpisah
+      if (body.type === "TRANSFER" && body.adminFee && body.adminFee > 0) {
+        await tx.transaction.create({
+          data: {
+            amount: body.adminFee,
+            type: "EXPENSE",
+            description: `Biaya Admin Transfer${body.description ? ' (' + body.description + ')' : ''}`,
+            date: body.date ? new Date(body.date) : new Date(),
+            isSynced: false,
+            userId: userId!,
+            accountId: body.accountId,
+            // categoryId tidak diisi (Tanpa Kategori) agar bisa diedit nanti atau masuk kategori default admin
+          }
+        });
+      }
 
       // 2. Update Saldo dengan logika Uang Goib
       const account = await tx.account.findUnique({ where: { id: body.accountId } });

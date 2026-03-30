@@ -30,7 +30,7 @@ export default function SettingsPage() {
   const { data: accountsRes, isLoading, mutate } = useSWR<{ data: AccountData[] }>("/api/accounts", fetcher);
   const accounts = accountsRes?.data || [];
 
-  const { data: categoriesRes, isLoading: catLoading, mutate: mutateCat } = useSWR<{ data: CategoryData[] }>("/api/categories", fetcher);
+  const { data: categoriesRes, isLoading: catLoading, mutate: mutateCat } = useSWR<{ data: CategoryData[] }>("/api/categories?nested=true", fetcher);
   const categories = categoriesRes?.data || [];
 
   // State for Accounts
@@ -42,6 +42,7 @@ export default function SettingsPage() {
   const [isAddingCat, setIsAddingCat] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [newCatType, setNewCatType] = useState<TransactionType>("EXPENSE");
+  const [newCatParentId, setNewCatParentId] = useState<string | undefined>(undefined);
 
   const [isSubmittingAccount, setIsSubmittingAccount] = useState(false);
   const [isSubmittingCat, setIsSubmittingCat] = useState(false);
@@ -139,6 +140,7 @@ export default function SettingsPage() {
           name: newCatName,
           type: newCatType,
           icon: newCatType === "EXPENSE" ? "💸" : "💰",
+          parentId: newCatParentId,
         }),
       });
 
@@ -147,6 +149,7 @@ export default function SettingsPage() {
         toast.success("Kategori berhasil ditambahkan!");
         setIsAddingCat(false);
         setNewCatName("");
+        setNewCatParentId(undefined);
         mutateCat();
       } else {
         toast.error(data.error || "Gagal menambah kategori");
@@ -349,7 +352,10 @@ export default function SettingsPage() {
             Manajemen Kategori
           </h2>
           {!isAddingCat && (
-            <Button size="sm" onClick={() => setIsAddingCat(true)} className="rounded-full bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
+            <Button size="sm" onClick={() => {
+              setNewCatParentId(undefined);
+              setIsAddingCat(true);
+            }} className="rounded-full bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
               <Plus className="w-4 h-4 mr-1" />
               Kategori Baru
             </Button>
@@ -363,9 +369,12 @@ export default function SettingsPage() {
             className={cn("bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/50 shadow-sm space-y-4 relative overflow-hidden", shake && "animate-shake")}
           >
             <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
-            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">Tambah Kategori Baru</h3>
+            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
+              {newCatParentId ? "Tambah Sub-Kategori" : "Tambah Kategori Baru"}
+            </h3>
             
             <div className="space-y-3">
+              {!newCatParentId && (
               <div className="flex rounded-lg bg-zinc-100 p-1 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
                 {(["EXPENSE", "INCOME"] as const).map((t) => (
                   <button
@@ -385,6 +394,12 @@ export default function SettingsPage() {
                   </button>
                 ))}
               </div>
+              )}
+              {newCatParentId && (
+                <div className="text-xs text-zinc-500 border border-zinc-200 dark:border-zinc-800 rounded-md p-2 bg-zinc-50 dark:bg-zinc-900">
+                  Sub-kategori untuk: <strong>{categories.find(c => c.id === newCatParentId)?.name}</strong>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-zinc-500 uppercase">Nama Kategori</label>
@@ -404,7 +419,10 @@ export default function SettingsPage() {
                 type="button" 
                 variant="outline" 
                 className="flex-1 rounded-xl border-zinc-200"
-                onClick={() => setIsAddingCat(false)}
+                onClick={() => {
+                  setIsAddingCat(false);
+                  setNewCatParentId(undefined);
+                }}
                 disabled={isSubmittingCat}
               >
                 Batal
@@ -421,54 +439,112 @@ export default function SettingsPage() {
         )}
 
         {/* List Kategori */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex flex-col gap-4">
           {catLoading ? (
             [...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)
           ) : categories.length === 0 ? (
-            <div className="col-span-1 sm:col-span-2 text-center py-8 text-zinc-500 text-sm bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+            <div className="text-center py-8 text-zinc-500 text-sm bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
               Belum ada kategori.
             </div>
           ) : (
             categories.map((cat) => (
-              <div key={cat.id} className="flex items-center justify-between p-3 rounded-xl bg-white shadow-sm border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800">
-                <div className="flex items-center gap-3">
-                  <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg text-sm", cat.type === "EXPENSE" ? "bg-red-50 text-red-500 dark:bg-red-950/30" : "bg-emerald-50 text-emerald-500 dark:bg-emerald-950/30")}>
-                    {cat.icon || (cat.type === "EXPENSE" ? "📉" : "📈")}
+              <div key={cat.id} className="flex flex-col p-4 rounded-xl bg-white shadow-sm border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg text-sm", cat.type === "EXPENSE" ? "bg-red-50 text-red-500 dark:bg-red-950/30" : "bg-emerald-50 text-emerald-500 dark:bg-emerald-950/30")}>
+                      {cat.icon || (cat.type === "EXPENSE" ? "📉" : "📈")}
+                    </div>
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">{cat.name}</span>
                   </div>
-                  <span className="font-medium text-zinc-900 dark:text-zinc-100 text-sm">{cat.name}</span>
-                </div>
-                
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      disabled={deletingId === cat.id}
-                      className="h-8 w-8 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                  
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setNewCatParentId(cat.id);
+                        setNewCatType(cat.type);
+                        setIsAddingCat(true);
+                      }}
+                      className="text-xs h-8 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
                     >
-                      {deletingId === cat.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                      + Sub
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="w-[90vw] max-w-md rounded-2xl">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Hapus Kategori {cat.name}?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Anda yakin ingin menghapus kategori ini? Data histori transaksi
-                        tidak akan terhapus, namun label kategorinya akan berubah menjadi 
-                        "Tanpa Kategori".
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={() => handleDeleteCategory(cat.id)}
-                        className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
-                      >
-                        Hapus
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          disabled={deletingId === cat.id}
+                          className="h-8 w-8 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                        >
+                          {deletingId === cat.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="w-[90vw] max-w-md rounded-2xl">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Hapus Kategori {cat.name}?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Anda yakin ingin menghapus kategori ini? Jika ini adalah Parent, 
+                            pastikan semua sub-kategori di dalamnya sudah dihapus terlebih dahulu.
+                            Transaksi lama tidak akan terhapus.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleDeleteCategory(cat.id)}
+                            className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
+                          >
+                            Hapus
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+
+                {cat.children && cat.children.length > 0 && (
+                  <div className="ml-5 flex flex-col gap-2 border-l-2 border-zinc-100 dark:border-zinc-800 pl-4 py-1">
+                    {cat.children.map((child) => (
+                      <div key={child.id} className="flex items-center justify-between p-2 rounded-lg bg-zinc-50 dark:bg-zinc-950/50">
+                        <div className="flex items-center gap-2">
+                           <div className="text-xs w-5 text-center">{child.icon || (cat.type === "EXPENSE" ? "📉" : "📈")}</div>
+                           <span className="text-sm text-zinc-600 dark:text-zinc-300 font-medium">{child.name}</span>
+                        </div>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              disabled={deletingId === child.id}
+                              className="h-6 w-6 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                            >
+                              {deletingId === child.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="w-[90vw] max-w-md rounded-2xl">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Hapus Sub-Kategori {child.name}?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Anda yakin ingin menghapus sub-kategori ini? Transaksi lama tidak akan terhapus.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDeleteCategory(child.id)}
+                                className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
+                              >
+                                Hapus
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))
           )}

@@ -54,7 +54,9 @@ export const ModelName = {
   User: 'User',
   Account: 'Account',
   Category: 'Category',
-  Transaction: 'Transaction'
+  Transaction: 'Transaction',
+  Budget: 'Budget',
+  Debt: 'Debt'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -104,6 +106,8 @@ export const CategoryScalarFieldEnum = {
   name: 'name',
   type: 'type',
   icon: 'icon',
+  order: 'order',
+  parentId: 'parentId',
   userId: 'userId'
 } as const
 
@@ -126,6 +130,36 @@ export const TransactionScalarFieldEnum = {
 } as const
 
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
+
+
+export const BudgetScalarFieldEnum = {
+  id: 'id',
+  amount: 'amount',
+  period: 'period',
+  categoryId: 'categoryId',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BudgetScalarFieldEnum = (typeof BudgetScalarFieldEnum)[keyof typeof BudgetScalarFieldEnum]
+
+
+export const DebtScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  personName: 'personName',
+  amount: 'amount',
+  description: 'description',
+  dueDate: 'dueDate',
+  isPaid: 'isPaid',
+  paidAt: 'paidAt',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DebtScalarFieldEnum = (typeof DebtScalarFieldEnum)[keyof typeof DebtScalarFieldEnum]
 
 
 export const SortOrder = {

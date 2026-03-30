@@ -37,3 +37,13 @@ export type Category = Prisma.CategoryModel
  * 
  */
 export type Transaction = Prisma.TransactionModel
+/**
+ * Model Budget
+ * 
+ */
+export type Budget = Prisma.BudgetModel
+/**
+ * Model Debt
+ * 
+ */
+export type Debt = Prisma.DebtModel

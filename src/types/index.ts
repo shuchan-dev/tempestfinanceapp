@@ -1,25 +1,19 @@
 /**
  * types/index.ts — Type Definitions (Kontrak Data Aplikasi)
- *
- * Tujuan: Mendefinisikan semua tipe yang digunakan antar layer:
- * API ↔ UI ↔ Database. Mengikuti prinsip SoC — tipe dipisah dari logika.
  */
 
 // ============================================================
-// ENUM — Tipe transaksi yang didukung
+// ENUM
 // ============================================================
-
-/** Tipe transaksi keuangan */
 export type TransactionType = "INCOME" | "EXPENSE" | "TRANSFER";
-
-/** Tipe akun keuangan */
 export type CategoryType = "INCOME" | "EXPENSE";
+export type BudgetPeriod = "MONTHLY" | "WEEKLY";
+export type DebtType = "HUTANG" | "PIUTANG";
 
 // ============================================================
 // INTERFACE — Shape data dari API
 // ============================================================
 
-/** Data akun keuangan pengguna */
 export interface AccountData {
   id: string;
   name: string;
@@ -31,15 +25,17 @@ export interface AccountData {
   updatedAt: Date;
 }
 
-/** Data kategori transaksi */
+/** Data kategori — mendukung struktur Parent/Child */
 export interface CategoryData {
   id: string;
   name: string;
   type: CategoryType;
   icon?: string | null;
+  order: number;
+  parentId?: string | null;
+  children?: CategoryData[]; // Hanya ada jika fetch dengan ?nested=true
 }
 
-/** Data transaksi lengkap (dengan relasi akun & kategori) */
 export interface TransactionData {
   id: string;
   amount: number;
@@ -52,30 +48,67 @@ export interface TransactionData {
   account: Pick<AccountData, "id" | "name" | "icon" | "color">;
   categoryId?: string | null;
   category?: Pick<CategoryData, "id" | "name" | "icon"> | null;
-  // Field khusus TRANSFER
   toAccountId?: string | null;
   toAccount?: Pick<AccountData, "id" | "name" | "icon" | "color"> | null;
   adminFee?: number | null;
 }
 
+/** Data budget threshold per kategori */
+export interface BudgetData {
+  id: string;
+  amount: number;
+  period: BudgetPeriod;
+  categoryId: string;
+  category: Pick<CategoryData, "id" | "name" | "icon" | "type">;
+  spent?: number; // Diisi oleh analytics API
+}
+
+/** Data hutang/piutang */
+export interface DebtData {
+  id: string;
+  type: DebtType;
+  personName: string;
+  amount: number;
+  description?: string | null;
+  dueDate?: Date | null;
+  isPaid: boolean;
+  paidAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** Data analytics monthly */
+export interface MonthlyData {
+  month: string; // "2026-03"
+  income: number;
+  expense: number;
+}
+
+/** Shape response analytics */
+export interface AnalyticsData {
+  burnRate: number;
+  totalExpenseThisMonth: number;
+  totalIncomeThisMonth: number;
+  netFlowThisMonth: number;
+  cashflow: MonthlyData[];
+  budgetProgress: (BudgetData & { spent: number; percentage: number })[];
+}
+
 // ============================================================
-// PAYLOAD — Shape data untuk request ke API
+// PAYLOAD
 // ============================================================
 
-/** Payload untuk membuat transaksi baru */
 export interface CreateTransactionPayload {
   amount: number;
   type: TransactionType;
   accountId: string;
   categoryId?: string;
   description?: string;
-  date?: string; // ISO string dari client
-  // Hanya untuk TRANSFER
+  date?: string;
   toAccountId?: string;
   adminFee?: number;
 }
 
-/** Payload untuk membuat akun baru */
 export interface CreateAccountPayload {
   name: string;
   balance?: number;
@@ -83,26 +116,35 @@ export interface CreateAccountPayload {
   color?: string;
 }
 
-// ============================================================
-// RESPONSE — Shape response dari API
-// ============================================================
+export interface CreateBudgetPayload {
+  categoryId: string;
+  amount: number;
+  period?: BudgetPeriod;
+}
 
-/** Response standar untuk operasi yang berhasil */
+export interface CreateDebtPayload {
+  type: DebtType;
+  personName: string;
+  amount: number;
+  description?: string;
+  dueDate?: string;
+}
+
+// ============================================================
+// RESPONSE
+// ============================================================
 export interface ApiSuccessResponse<T> {
   success: true;
   data: T;
 }
 
-/** Response standar untuk operasi yang gagal */
 export interface ApiErrorResponse {
   success: false;
   error: string;
 }
 
-/** Union type untuk semua response API */
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
-/** Result dari operasi sync */
 export interface SyncResult {
   synced: number;
   failed: number;
