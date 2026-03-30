@@ -151,6 +151,16 @@ export async function DELETE(
       );
     }
 
+    if (account.uangGoib !== 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Gagal: Akun masih memiliki Uang Goib (hutang) sebesar ${account.uangGoib}. Lunasi dulu sebelum menghapus akun.`,
+        },
+        { status: 400 },
+      );
+    }
+
     await db.$transaction(
       async (tx: any) => {
         await tx.transaction.deleteMany({

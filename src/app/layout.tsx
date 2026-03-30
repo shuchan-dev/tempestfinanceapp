@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { OfflineBanner } from "@/components/offline-banner";
 import { BottomNav } from "@/components/bottom-nav";
+import { SWRProvider } from "@/components/swr-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -49,13 +50,15 @@ export default function RootLayout({
       >
         <OfflineBanner />
         
-        {/* Main Content Area */}
-        <div className="mx-auto max-w-md bg-white min-h-screen dark:bg-zinc-950/50 sm:border-x sm:border-zinc-200 sm:dark:border-zinc-800 sm:shadow-sm">
-          {children}
-        </div>
+        <SWRProvider>
+          {/* Main Content Area */}
+          <div className="mx-auto max-w-md bg-white min-h-screen dark:bg-zinc-950/50 sm:border-x sm:border-zinc-200 sm:dark:border-zinc-800 sm:shadow-sm">
+            {children}
+          </div>
 
-        <BottomNav />
-        <Toaster position="top-center" richColors theme="dark" />
+          <BottomNav />
+          <Toaster position="top-center" richColors theme="dark" />
+        </SWRProvider>
       </body>
     </html>
   );

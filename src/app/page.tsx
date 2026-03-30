@@ -19,11 +19,7 @@ export default function Dashboard() {
   const { data: accountsRes, isLoading: accountsLoading } = useSWR<{
     data: AccountData[];
   }>("/api/accounts", fetcher);
-  const {
-    data: txRes,
-    isLoading: txLoading,
-    mutate,
-  } = useSWR<{ data: TransactionData[] }>(
+  const { data: txRes, isLoading: txLoading } = useSWR<{ data: TransactionData[] }>(
     "/api/transactions?limit=10",
     fetcher,
   );
@@ -32,11 +28,6 @@ export default function Dashboard() {
   const transactions = txRes?.data || [];
 
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-
-  const handleTransactionSuccess = () => {
-    // Re-fetch data instantly when a new transaction is made
-    mutate();
-  };
 
   return (
     <div className="flex flex-col gap-6 p-6 pt-10 pb-32">
@@ -60,7 +51,7 @@ export default function Dashboard() {
           [1, 2].map((i) => (
             <Skeleton
               key={i}
-              className="h-32 w-48 min-w-[192px] rounded-2xl flex-shrink-0"
+              className="h-32 w-48 min-w-[192px] rounded-2xl shrink-0"
             />
           ))
         ) : accounts.length === 0 ? (
@@ -159,6 +150,12 @@ export default function Dashboard() {
                   >
                     {getTransactionSign(tx.type)} {formatCurrency(tx.amount)}
                   </span>
+                  {/* Biaya Admin Transfer */}
+                  {tx.type === "TRANSFER" && tx.adminFee && tx.adminFee > 0 && (
+                    <span className="text-[10px] font-semibold text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded-full">
+                      + Admin {formatCurrency(tx.adminFee)}
+                    </span>
+                  )}
                   {/* Status Indicator (⏳ pending vs ✅ synced) */}
                   <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-800">
                     {tx.isSynced ? "✅ Synced" : "⏳ Pending"}
@@ -172,7 +169,7 @@ export default function Dashboard() {
 
       {/* Floating Action Button Setup */}
       <div className="fixed bottom-24 right-6 z-50 md:bottom-10">
-        <TransactionForm onSuccess={handleTransactionSuccess} />
+        <TransactionForm />
       </div>
     </div>
   );

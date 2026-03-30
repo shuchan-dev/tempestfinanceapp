@@ -43,7 +43,8 @@ export default function SettingsPage() {
   const [newCatName, setNewCatName] = useState("");
   const [newCatType, setNewCatType] = useState<TransactionType>("EXPENSE");
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmittingAccount, setIsSubmittingAccount] = useState(false);
+  const [isSubmittingCat, setIsSubmittingCat] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
 
@@ -70,7 +71,7 @@ export default function SettingsPage() {
       return;
     }
 
-    setIsSubmitting(true);
+    setIsSubmittingAccount(true);
     const numericBalance = Number(newAccountBalance.replace(/[^0-9]/g, "")) || 0;
 
     try {
@@ -99,7 +100,7 @@ export default function SettingsPage() {
     } catch (err) {
       toast.error("Masalah jaringan");
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittingAccount(false);
     }
   };
 
@@ -129,7 +130,7 @@ export default function SettingsPage() {
       return;
     }
 
-    setIsSubmitting(true);
+    setIsSubmittingCat(true);
     try {
       const res = await fetch("/api/categories", {
         method: "POST",
@@ -154,7 +155,7 @@ export default function SettingsPage() {
     } catch (err) {
       toast.error("Masalah jaringan");
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittingCat(false);
     }
   };
 
@@ -177,7 +178,7 @@ export default function SettingsPage() {
   };
 
   const handleLogout = async () => {
-    setIsSubmitting(true);
+    setIsSubmittingAccount(true); // reuse untuk blok logout
     try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       const data = await res.json();
@@ -191,7 +192,7 @@ export default function SettingsPage() {
     } catch (e) {
       toast.error("Masalah jaringan");
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittingAccount(false);
     }
   };
 
@@ -240,7 +241,7 @@ export default function SettingsPage() {
                   value={newAccountName}
                   onChange={(e) => setNewAccountName(e.target.value)}
                   className="rounded-xl border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950"
-                  disabled={isSubmitting}
+                  disabled={isSubmittingAccount}
                 />
               </div>
 
@@ -254,7 +255,7 @@ export default function SettingsPage() {
                     onChange={handleBalanceChange}
                     inputMode="numeric"
                     className="rounded-xl pl-9 border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 font-semibold"
-                    disabled={isSubmitting}
+                    disabled={isSubmittingAccount}
                   />
                 </div>
               </div>
@@ -266,16 +267,16 @@ export default function SettingsPage() {
                 variant="outline" 
                 className="flex-1 rounded-xl border-zinc-200"
                 onClick={() => setIsAddingAccount(false)}
-                disabled={isSubmitting}
+                disabled={isSubmittingAccount}
               >
                 Batal
               </Button>
               <Button 
                 type="submit" 
                 className="flex-1 rounded-xl bg-blue-500 hover:bg-blue-600 text-white"
-                disabled={isSubmitting}
+                disabled={isSubmittingAccount}
               >
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan"}
+                {isSubmittingAccount ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan"}
               </Button>
             </div>
           </form>
@@ -393,7 +394,7 @@ export default function SettingsPage() {
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
                   className="rounded-xl border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950"
-                  disabled={isSubmitting}
+                  disabled={isSubmittingCat}
                 />
               </div>
             </div>
@@ -404,16 +405,16 @@ export default function SettingsPage() {
                 variant="outline" 
                 className="flex-1 rounded-xl border-zinc-200"
                 onClick={() => setIsAddingCat(false)}
-                disabled={isSubmitting}
+                disabled={isSubmittingCat}
               >
                 Batal
               </Button>
               <Button 
                 type="submit" 
                 className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white"
-                disabled={isSubmitting}
+                disabled={isSubmittingCat}
               >
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan"}
+                {isSubmittingCat ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan"}
               </Button>
             </div>
           </form>
@@ -485,11 +486,11 @@ export default function SettingsPage() {
           <p className="text-sm text-zinc-500 mb-2">Mengeluarkan sesi Anda dari perangkat ini.</p>
           <Button 
             onClick={handleLogout} 
-            disabled={isSubmitting}
+            disabled={isSubmittingAccount}
             variant="destructive" 
             className="w-full sm:w-auto self-start rounded-xl font-semibold shadow-sm"
           >
-            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LogOut className="h-4 w-4 mr-2" />}
+            {isSubmittingAccount ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LogOut className="h-4 w-4 mr-2" />}
             Keluar (Logout)
           </Button>
         </div>

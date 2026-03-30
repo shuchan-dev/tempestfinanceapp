@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
 import { cn } from "@/lib/utils";
-import type { AccountData, CategoryData, TransactionType } from "@/types";
+import type { AccountData, CategoryData, TransactionData, TransactionType } from "@/types";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+// fetcher tidak perlu didefinisikan lokal — sudah di-provide global oleh SWRProvider di layout.tsx
 
 interface TransactionFormProps {
   children?: React.ReactNode;
@@ -43,14 +43,14 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
   const [description, setDescription] = useState<string>("");
   const [date, setDate] = useState<Date>(new Date());
   const [adminFee, setAdminFee] = useState<string>("");
-  
+
   const [isShaking, setIsShaking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch reference data
+  // Fetch reference data (fetcher diambil dari SWRProvider — tidak ada request duplikat)
   const { mutate } = useSWRConfig();
-  const { data: accountsRes } = useSWR<{ data: AccountData[] }>("/api/accounts", fetcher);
-  const { data: categoriesRes } = useSWR<{ data: CategoryData[] }>(`/api/categories?type=${type}`, fetcher);
+  const { data: accountsRes } = useSWR<{ data: AccountData[] }>("/api/accounts");
+  const { data: categoriesRes } = useSWR<{ data: CategoryData[] }>(`/api/categories?type=${type}`);
 
   const accounts = accountsRes?.data || [];
   const categories = categoriesRes?.data || [];
@@ -99,7 +99,7 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
     }
 
     setIsSubmitting(true);
-    
+
     // Background POST via API (Offline-first approach dictates quick UI feedback, 
     // but here we await just to ensure local SQLite write succeeds)
     try {
@@ -121,18 +121,35 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
       const result = await res.json();
 
       if (result.success) {
-        toast.success("Tersimpan di Lokal!");
+        toast.success("Transaksi tersimpan!");
         setOpen(false);
         // Reset form
         setAmount("");
         setDescription("");
         setAdminFee("");
         setDate(new Date());
-        
-        // Instant global UI update
+
+        // ─── Strategi 3: Optimistic/Smart Cache Update ─────────
+        // Gunakan revalidate: false agar UI ter-update tanpa round-trip DB baru.
+        // Data akun perlu di-revalidate karena saldo berubah di server.
         mutate("/api/accounts");
-        mutate("/api/transactions?limit=10");
-        mutate("/api/transactions?limit=100");
+        // Untuk transaksi: inject data baru langsung ke cache SWR (zero DB call)
+        mutate(
+          "/api/transactions?limit=10",
+          (current: { data: TransactionData[] } | undefined) => {
+            const prev = current?.data ?? [];
+            return { data: [result.data, ...prev].slice(0, 10) };
+          },
+          { revalidate: false } // ← Kunci: tidak trigger re-fetch ke DB
+        );
+        mutate(
+          "/api/transactions?limit=100",
+          (current: { data: TransactionData[] } | undefined) => {
+            const prev = current?.data ?? [];
+            return { data: [result.data, ...prev].slice(0, 100) };
+          },
+          { revalidate: false }
+        );
 
         if (onSuccess) onSuccess();
       } else {
@@ -169,8 +186,23 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
     setAdminFee(formatted);
   };
 
+  // Reset semua state ke default — dipanggil saat dialog ditutup
+  const resetForm = () => {
+    setType("EXPENSE");
+    setAmount("");
+    setAccountId("");
+    setCategoryId("");
+    setToAccountId("");
+    setDescription("");
+    setDate(new Date());
+    setAdminFee("");
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      setOpen(isOpen);
+      if (!isOpen) resetForm(); // Bug 5 Fix: reset state saat dialog ditutup
+    }}>
       <DialogTrigger asChild>
         {children || (
           <Button size="icon" className="h-14 w-14 rounded-full shadow-lg">
@@ -178,14 +210,14 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
           </Button>
         )}
       </DialogTrigger>
-      
+
       <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden bg-zinc-50 dark:bg-zinc-950">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="text-xl font-semibold">Transaksi Baru</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className={cn("flex flex-col gap-5 p-6", isShaking && "animate-shake")}>
-          
+
           {/* Type & Date Area */}
           <div className="flex flex-col gap-3">
             <div className="flex rounded-xl bg-zinc-100 p-1 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
@@ -203,8 +235,8 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
                       ? t === "EXPENSE"
                         ? "bg-red-500 text-white shadow-sm"
                         : t === "INCOME"
-                        ? "bg-emerald-500 text-white shadow-sm"
-                        : "bg-blue-500 text-white shadow-sm"
+                          ? "bg-emerald-500 text-white shadow-sm"
+                          : "bg-blue-500 text-white shadow-sm"
                       : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
                   )}
                 >
@@ -282,7 +314,7 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
                   <select
                     value={toAccountId}
                     onChange={(e) => setToAccountId(e.target.value)}
-                    className="w-full rounded-xl border-blue-200 bg-blue-50/50 p-3 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 dark:border-blue-900/50 dark:bg-blue-950/20"
+                    className="w-full rounded-xl border-blue-200 bg-blue-50/50 p-3 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 dark:border-blue-900/50 dark:bg-blue-900"
                   >
                     <option value="" disabled>Pilih Akun Tujuan...</option>
                     {accounts.filter(a => a.id !== accountId).map((a) => (
@@ -337,14 +369,14 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
             </div>
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={isSubmitting}
             className={cn(
               "w-full rounded-xl mt-4 py-6 text-base font-semibold transition-all",
               type === "EXPENSE" ? "bg-red-500 hover:bg-red-600" :
-              type === "INCOME" ? "bg-emerald-500 hover:bg-emerald-600" :
-              "bg-blue-500 hover:bg-blue-600"
+                type === "INCOME" ? "bg-emerald-500 hover:bg-emerald-600" :
+                  "bg-blue-500 hover:bg-blue-600"
             )}
           >
             {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Simpan Transaksi"}

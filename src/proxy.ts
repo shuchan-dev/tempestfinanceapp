@@ -15,7 +15,7 @@ export function proxy(request: NextRequest) {
     // 1. Jika request mengarah ke /api/..., kembalikan JSON error 401
     if (pathname.startsWith("/api/")) {
       return NextResponse.json(
-        { success: false, error: "Sesi berakhir atau tidak terautentikasi" },
+        { success: false, error: "Sesi berakhir atau tidak valid" },
         { status: 401 },
       );
     }

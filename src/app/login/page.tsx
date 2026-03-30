@@ -37,8 +37,7 @@ export default function LoginPage() {
 
       if (data.success) {
         toast.success(`Selamat datang, ${data.name}!`);
-        // Use window.location.href to hard-refresh or router.push
-        // A hard refresh ensures middleware re-evaluates the cookie immediately
+        // window.location.href = "/";
         router.push("/");
       } else {
         toast.error(data.error || "Gagal masuk");

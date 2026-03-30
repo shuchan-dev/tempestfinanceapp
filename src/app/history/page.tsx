@@ -84,12 +84,19 @@ export default function HistoryPage() {
                   {getTransactionSign(tx.type)} {formatCurrency(tx.amount)}
                 </span>
 
+                {/* Biaya Admin Transfer */}
+                {tx.type === "TRANSFER" && tx.adminFee && tx.adminFee > 0 && (
+                  <span className="text-[10px] font-semibold text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded-full">
+                    + Admin {formatCurrency(tx.adminFee)}
+                  </span>
+                )}
+
                 {tx.description && (
-                  <span
+                    <span
                     className="text-[10px] text-zinc-400 max-w-[100px] truncate"
                     title={tx.description}
                   >
-                    `{tx.description}`
+                    {tx.description}
                   </span>
                 )}
 

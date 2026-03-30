@@ -11,7 +11,8 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   // Tambahkan package Prisma binding agar tidak dicompile jadi Webpack module
-  serverExternalPackages: ["@libsql/client"],
+  // Paket native Node.js yang tidak boleh di-bundle oleh Webpack/Turbopack
+  serverExternalPackages: ["pg", "@prisma/adapter-pg"],
   // Konfigurasi Turbopack untuk kompatibilitas
   turbopack: {},
 };

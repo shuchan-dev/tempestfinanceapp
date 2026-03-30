@@ -44,3 +44,12 @@ yarn-error.log*
 next-env.d.ts
 
 /generated/prisma
+
+#plan
+flow.md
+plan-fase1.md
+plan-fase2.md
+plan-fase4.md
+proposal.md
+standartcode.md
+strategi.md

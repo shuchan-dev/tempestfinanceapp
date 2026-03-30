@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { signSession } from "@/lib/session-utils";
 import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
@@ -53,12 +54,15 @@ export async function POST(req: NextRequest) {
       { status: 200 },
     );
 
-    // Set secure HTTP-Only cookie for simple authentication
-    response.cookies.set("tempest_session", user.id, {
+    // Sign session token dengan HMAC — mencegah session fixation.
+    // Cookie tidak menyimpan raw userId, melainkan token bertanda-tangan.
+    const sessionToken = signSession(user.id);
+
+    response.cookies.set("tempest_session", sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24, // 1 day
+      maxAge: 60 * 60 * 24 * 7, // 7 hari (lebih praktis untuk personal app)
       path: "/",
     });
 
@@ -71,3 +75,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

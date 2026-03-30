@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
 import { Pool } from "pg";
@@ -10,15 +9,22 @@ const globalForPrisma = globalThis as unknown as {
   pool_v2: Pool | undefined;
 };
 
-// Next.js hot reload causes new connections to be instantiated frequently.
-// We preserve BOTH the pool and the prisma client on the global scope to prevent
-// connection leak and exhausting PostgreSQL connection slots leading to P2028.
-const pool = globalForPrisma.pool_v2 ?? new Pool({ connectionString });
+/**
+ * CRITICAL FIX: Pool dan PrismaClient SELALU disimpan ke globalThis,
+ * tidak hanya di development.
+ *
+ * Di Vercel (production), setiap Serverless Function invocation berbagi
+ * process yang sama dalam satu container. Jika tidak disimpan ke global,
+ * setiap request akan membuat koneksi baru ke PostgreSQL dan menghabiskan
+ * connection pool (menyebabkan error P2024 - connection timeout).
+ *
+ * Ref: https://www.prisma.io/docs/guides/performance-and-optimization/connection-management
+ */
+const pool = globalForPrisma.pool_v2 ?? new Pool({ connectionString, max: 5 });
 const adapter = new PrismaPg(pool as any);
 
 export const db = globalForPrisma.prisma_v2 ?? new PrismaClient({ adapter });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma_v2 = db;
-  globalForPrisma.pool_v2 = pool;
-}
+// Simpan ke global agar tidak di-instantiate ulang (berlaku di dev & production)
+globalForPrisma.prisma_v2 = db;
+globalForPrisma.pool_v2 = pool;
