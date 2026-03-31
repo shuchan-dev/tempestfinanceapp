@@ -14,9 +14,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Gunakan findFirst karena 'name' bukan @unique di schema
+    // SQLite/Turso tidak support mode:"insensitive", bandingkan lowercase di sisi aplikasi
+    const normalizedName = name.trim().toLowerCase();
     const existingUser = await db.user.findFirst({
       where: {
-        name: { equals: name.trim(), mode: "insensitive" }, // Abaikan huruf besar/kecil
+        name: normalizedName,
       },
     });
 
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     await db.user.create({
       data: {
-        name: name.trim(),
+        name: normalizedName, // Simpan dalam lowercase untuk konsistensi
         pin: hashedPin, // Simpan hasil hash, bukan plaintext
         isApproved: false,
       },

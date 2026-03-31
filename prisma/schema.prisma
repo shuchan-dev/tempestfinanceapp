@@ -3,12 +3,13 @@
 // Komunikasi DB hanya via: prisma migrate dev & prisma generate
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 // ============================================================
@@ -46,7 +47,7 @@ model Account {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   transactions Transaction[] @relation("AccountTransactions")
-  transfersIn  Transaction[]  @relation("TransferTo")
+  transfersIn  Transaction[] @relation("TransferTo")
 }
 
 // ============================================================
@@ -56,7 +57,7 @@ model Account {
 model Category {
   id    String  @id @default(cuid())
   name  String
-  type  String  // "INCOME" atau "EXPENSE"
+  type  String // "INCOME" atau "EXPENSE"
   icon  String?
   order Int     @default(0) // Urutan tampil di UI
 
@@ -80,14 +81,14 @@ model Category {
 model Transaction {
   id          String   @id @default(cuid())
   amount      Float
-  type        String   // "INCOME" | "EXPENSE" | "TRANSFER"
+  type        String // "INCOME" | "EXPENSE" | "TRANSFER"
   description String?
   date        DateTime @default(now())
   createdAt   DateTime @default(now())
   isSynced    Boolean  @default(false)
 
-  userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   accountId String
   account   Account @relation("AccountTransactions", fields: [accountId], references: [id])
@@ -107,7 +108,7 @@ model Transaction {
 // ============================================================
 model Budget {
   id     String @id @default(cuid())
-  amount Float  // Batas maksimal
+  amount Float // Batas maksimal
   period String @default("MONTHLY") // "MONTHLY" | "WEEKLY"
 
   categoryId String
@@ -130,10 +131,10 @@ model Budget {
 // ============================================================
 model Debt {
   id          String    @id @default(cuid())
-  type        String    // "HUTANG" | "PIUTANG"
-  personName  String    // Nama orang yang terlibat
-  amount      Float     // Nominal
-  description String?   // Catatan opsional
+  type        String // "HUTANG" | "PIUTANG"
+  personName  String // Nama orang yang terlibat
+  amount      Float // Nominal
+  description String? // Catatan opsional
   dueDate     DateTime? // Jatuh tempo opsional
   isPaid      Boolean   @default(false)
   paidAt      DateTime? // Kapan dilunasi

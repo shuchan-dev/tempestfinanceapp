@@ -572,7 +572,6 @@ export type DebtCreateOrConnectWithoutUserInput = {
 
 export type DebtCreateManyUserInputEnvelope = {
   data: Prisma.DebtCreateManyUserInput | Prisma.DebtCreateManyUserInput[]
-  skipDuplicates?: boolean
 }
 
 export type DebtUpsertWithWhereUniqueWithoutUserInput = {
@@ -1418,7 +1417,6 @@ export type DebtCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * The data used to create many Debts.
    */
   data: Prisma.DebtCreateManyInput | Prisma.DebtCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1437,7 +1435,6 @@ export type DebtCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions
    * The data used to create many Debts.
    */
   data: Prisma.DebtCreateManyInput | Prisma.DebtCreateManyInput[]
-  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

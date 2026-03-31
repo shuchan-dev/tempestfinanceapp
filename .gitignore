@@ -3,6 +3,9 @@
 #SQL Lite
 *.db
 
+#script
+/scripts/*.mjs
+
 # dependencies
 /node_modules
 /.pnp

@@ -14,10 +14,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1. Cari user berdasarkan nama (Case-insensitive)
+    // 1. Cari user berdasarkan nama
+    // SQLite/Turso tidak support mode:"insensitive", bandingkan lowercase di sisi aplikasi
     const user = await db.user.findFirst({
       where: {
-        name: { equals: name.trim(), mode: "insensitive" },
+        name: name.trim().toLowerCase(),
       },
     });
 
