@@ -35,7 +35,8 @@ export async function GET(): Promise<NextResponse<ApiResponse<AccountData[]>>> {
     if (error) return error;
 
     const accounts = await db.account.findMany({
-      where: { userId: userId! },
+      where: { userId: userId!, parentId: null },
+      include: { children: true },
       orderBy: { createdAt: "asc" },
     });
 
@@ -76,6 +77,7 @@ export async function POST(
             balance: body.balance ?? 0,
             icon: body.icon || "🏦",
             color: body.color || "#10b981",
+            parentId: body.parentId || null,
             userId: userId!,
           },
         });
@@ -135,6 +137,7 @@ export async function DELETE(
     // Pastikan akun ini milik user aktif (mencegah IDOR attack)
     const account = await db.account.findFirst({
       where: { id, userId: userId! },
+      include: { children: true }
     });
 
     if (!account) {
@@ -144,27 +147,38 @@ export async function DELETE(
       );
     }
 
-    if (account.balance !== 0) {
+    let totalBalance = account.balance;
+    let totalUangGoib = account.uangGoib;
+    if (account.children) {
+      for (const child of account.children) {
+        totalBalance += child.balance;
+        totalUangGoib += child.uangGoib;
+      }
+    }
+
+    if (totalBalance !== 0 || totalBalance < 0) {
       return NextResponse.json(
-        { success: false, error: "Gagal: Saldo akun harus 0 sebelum dihapus!" },
+        { success: false, error: "Gagal: Total saldo akun induk dan kantong harus 0 sebelum dihapus!" },
         { status: 400 },
       );
     }
 
-    if (account.uangGoib !== 0) {
+    if (totalUangGoib !== 0) {
       return NextResponse.json(
         {
           success: false,
-          error: `Gagal: Akun masih memiliki Uang Goib (hutang) sebesar ${account.uangGoib}. Lunasi dulu sebelum menghapus akun.`,
+          error: `Gagal: Akun masih memiliki Uang Goib (hutang) sebesar ${totalUangGoib}. Lunasi dulu sebelum menghapus akun.`,
         },
         { status: 400 },
       );
     }
 
+    const idsToDelete = [account.id, ...(account.children?.map((c: any) => c.id) || [])];
+
     await db.$transaction(
       async (tx: any) => {
         await tx.transaction.deleteMany({
-          where: { OR: [{ accountId: id }, { toAccountId: id }] },
+          where: { OR: [{ accountId: { in: idsToDelete } }, { toAccountId: { in: idsToDelete } }] },
         });
         await tx.account.delete({ where: { id } });
       },

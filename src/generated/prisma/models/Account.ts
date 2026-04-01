@@ -45,6 +45,7 @@ export type AccountMinAggregateOutputType = {
   color: string | null
   createdAt: Date | null
   updatedAt: Date | null
+  parentId: string | null
   userId: string | null
 }
 
@@ -57,6 +58,7 @@ export type AccountMaxAggregateOutputType = {
   color: string | null
   createdAt: Date | null
   updatedAt: Date | null
+  parentId: string | null
   userId: string | null
 }
 
@@ -69,6 +71,7 @@ export type AccountCountAggregateOutputType = {
   color: number
   createdAt: number
   updatedAt: number
+  parentId: number
   userId: number
   _all: number
 }
@@ -93,6 +96,7 @@ export type AccountMinAggregateInputType = {
   color?: true
   createdAt?: true
   updatedAt?: true
+  parentId?: true
   userId?: true
 }
 
@@ -105,6 +109,7 @@ export type AccountMaxAggregateInputType = {
   color?: true
   createdAt?: true
   updatedAt?: true
+  parentId?: true
   userId?: true
 }
 
@@ -117,6 +122,7 @@ export type AccountCountAggregateInputType = {
   color?: true
   createdAt?: true
   updatedAt?: true
+  parentId?: true
   userId?: true
   _all?: true
 }
@@ -216,6 +222,7 @@ export type AccountGroupByOutputType = {
   color: string | null
   createdAt: Date
   updatedAt: Date
+  parentId: string | null
   userId: string
   _count: AccountCountAggregateOutputType | null
   _avg: AccountAvgAggregateOutputType | null
@@ -251,7 +258,10 @@ export type AccountWhereInput = {
   color?: Prisma.StringNullableFilter<"Account"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Account"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Account"> | Date | string
+  parentId?: Prisma.StringNullableFilter<"Account"> | string | null
   userId?: Prisma.StringFilter<"Account"> | string
+  parent?: Prisma.XOR<Prisma.AccountNullableScalarRelationFilter, Prisma.AccountWhereInput> | null
+  children?: Prisma.AccountListRelationFilter
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   transactions?: Prisma.TransactionListRelationFilter
   transfersIn?: Prisma.TransactionListRelationFilter
@@ -266,7 +276,10 @@ export type AccountOrderByWithRelationInput = {
   color?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  parentId?: Prisma.SortOrderInput | Prisma.SortOrder
   userId?: Prisma.SortOrder
+  parent?: Prisma.AccountOrderByWithRelationInput
+  children?: Prisma.AccountOrderByRelationAggregateInput
   user?: Prisma.UserOrderByWithRelationInput
   transactions?: Prisma.TransactionOrderByRelationAggregateInput
   transfersIn?: Prisma.TransactionOrderByRelationAggregateInput
@@ -284,7 +297,10 @@ export type AccountWhereUniqueInput = Prisma.AtLeast<{
   color?: Prisma.StringNullableFilter<"Account"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Account"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Account"> | Date | string
+  parentId?: Prisma.StringNullableFilter<"Account"> | string | null
   userId?: Prisma.StringFilter<"Account"> | string
+  parent?: Prisma.XOR<Prisma.AccountNullableScalarRelationFilter, Prisma.AccountWhereInput> | null
+  children?: Prisma.AccountListRelationFilter
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   transactions?: Prisma.TransactionListRelationFilter
   transfersIn?: Prisma.TransactionListRelationFilter
@@ -299,6 +315,7 @@ export type AccountOrderByWithAggregationInput = {
   color?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  parentId?: Prisma.SortOrderInput | Prisma.SortOrder
   userId?: Prisma.SortOrder
   _count?: Prisma.AccountCountOrderByAggregateInput
   _avg?: Prisma.AccountAvgOrderByAggregateInput
@@ -319,6 +336,7 @@ export type AccountScalarWhereWithAggregatesInput = {
   color?: Prisma.StringNullableWithAggregatesFilter<"Account"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Account"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Account"> | Date | string
+  parentId?: Prisma.StringNullableWithAggregatesFilter<"Account"> | string | null
   userId?: Prisma.StringWithAggregatesFilter<"Account"> | string
 }
 
@@ -331,6 +349,8 @@ export type AccountCreateInput = {
   color?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  parent?: Prisma.AccountCreateNestedOneWithoutChildrenInput
+  children?: Prisma.AccountCreateNestedManyWithoutParentInput
   user: Prisma.UserCreateNestedOneWithoutAccountsInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionCreateNestedManyWithoutToAccountInput
@@ -345,7 +365,9 @@ export type AccountUncheckedCreateInput = {
   color?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  parentId?: string | null
   userId: string
+  children?: Prisma.AccountUncheckedCreateNestedManyWithoutParentInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionUncheckedCreateNestedManyWithoutToAccountInput
 }
@@ -359,6 +381,8 @@ export type AccountUpdateInput = {
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parent?: Prisma.AccountUpdateOneWithoutChildrenNestedInput
+  children?: Prisma.AccountUpdateManyWithoutParentNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutAccountsNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUpdateManyWithoutToAccountNestedInput
@@ -373,7 +397,9 @@ export type AccountUncheckedUpdateInput = {
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  children?: Prisma.AccountUncheckedUpdateManyWithoutParentNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUncheckedUpdateManyWithoutToAccountNestedInput
 }
@@ -387,6 +413,7 @@ export type AccountCreateManyInput = {
   color?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  parentId?: string | null
   userId: string
 }
 
@@ -410,6 +437,7 @@ export type AccountUncheckedUpdateManyInput = {
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -423,6 +451,11 @@ export type AccountOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type AccountNullableScalarRelationFilter = {
+  is?: Prisma.AccountWhereInput | null
+  isNot?: Prisma.AccountWhereInput | null
+}
+
 export type AccountCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -432,6 +465,7 @@ export type AccountCountOrderByAggregateInput = {
   color?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  parentId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
 }
 
@@ -449,6 +483,7 @@ export type AccountMaxOrderByAggregateInput = {
   color?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  parentId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
 }
 
@@ -461,6 +496,7 @@ export type AccountMinOrderByAggregateInput = {
   color?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  parentId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
 }
 
@@ -472,11 +508,6 @@ export type AccountSumOrderByAggregateInput = {
 export type AccountScalarRelationFilter = {
   is?: Prisma.AccountWhereInput
   isNot?: Prisma.AccountWhereInput
-}
-
-export type AccountNullableScalarRelationFilter = {
-  is?: Prisma.AccountWhereInput | null
-  isNot?: Prisma.AccountWhereInput | null
 }
 
 export type AccountCreateNestedManyWithoutUserInput = {
@@ -521,6 +552,26 @@ export type AccountUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.AccountScalarWhereInput | Prisma.AccountScalarWhereInput[]
 }
 
+export type AccountCreateNestedOneWithoutChildrenInput = {
+  create?: Prisma.XOR<Prisma.AccountCreateWithoutChildrenInput, Prisma.AccountUncheckedCreateWithoutChildrenInput>
+  connectOrCreate?: Prisma.AccountCreateOrConnectWithoutChildrenInput
+  connect?: Prisma.AccountWhereUniqueInput
+}
+
+export type AccountCreateNestedManyWithoutParentInput = {
+  create?: Prisma.XOR<Prisma.AccountCreateWithoutParentInput, Prisma.AccountUncheckedCreateWithoutParentInput> | Prisma.AccountCreateWithoutParentInput[] | Prisma.AccountUncheckedCreateWithoutParentInput[]
+  connectOrCreate?: Prisma.AccountCreateOrConnectWithoutParentInput | Prisma.AccountCreateOrConnectWithoutParentInput[]
+  createMany?: Prisma.AccountCreateManyParentInputEnvelope
+  connect?: Prisma.AccountWhereUniqueInput | Prisma.AccountWhereUniqueInput[]
+}
+
+export type AccountUncheckedCreateNestedManyWithoutParentInput = {
+  create?: Prisma.XOR<Prisma.AccountCreateWithoutParentInput, Prisma.AccountUncheckedCreateWithoutParentInput> | Prisma.AccountCreateWithoutParentInput[] | Prisma.AccountUncheckedCreateWithoutParentInput[]
+  connectOrCreate?: Prisma.AccountCreateOrConnectWithoutParentInput | Prisma.AccountCreateOrConnectWithoutParentInput[]
+  createMany?: Prisma.AccountCreateManyParentInputEnvelope
+  connect?: Prisma.AccountWhereUniqueInput | Prisma.AccountWhereUniqueInput[]
+}
+
 export type FloatFieldUpdateOperationsInput = {
   set?: number
   increment?: number
@@ -531,6 +582,44 @@ export type FloatFieldUpdateOperationsInput = {
 
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
+}
+
+export type AccountUpdateOneWithoutChildrenNestedInput = {
+  create?: Prisma.XOR<Prisma.AccountCreateWithoutChildrenInput, Prisma.AccountUncheckedCreateWithoutChildrenInput>
+  connectOrCreate?: Prisma.AccountCreateOrConnectWithoutChildrenInput
+  upsert?: Prisma.AccountUpsertWithoutChildrenInput
+  disconnect?: Prisma.AccountWhereInput | boolean
+  delete?: Prisma.AccountWhereInput | boolean
+  connect?: Prisma.AccountWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AccountUpdateToOneWithWhereWithoutChildrenInput, Prisma.AccountUpdateWithoutChildrenInput>, Prisma.AccountUncheckedUpdateWithoutChildrenInput>
+}
+
+export type AccountUpdateManyWithoutParentNestedInput = {
+  create?: Prisma.XOR<Prisma.AccountCreateWithoutParentInput, Prisma.AccountUncheckedCreateWithoutParentInput> | Prisma.AccountCreateWithoutParentInput[] | Prisma.AccountUncheckedCreateWithoutParentInput[]
+  connectOrCreate?: Prisma.AccountCreateOrConnectWithoutParentInput | Prisma.AccountCreateOrConnectWithoutParentInput[]
+  upsert?: Prisma.AccountUpsertWithWhereUniqueWithoutParentInput | Prisma.AccountUpsertWithWhereUniqueWithoutParentInput[]
+  createMany?: Prisma.AccountCreateManyParentInputEnvelope
+  set?: Prisma.AccountWhereUniqueInput | Prisma.AccountWhereUniqueInput[]
+  disconnect?: Prisma.AccountWhereUniqueInput | Prisma.AccountWhereUniqueInput[]
+  delete?: Prisma.AccountWhereUniqueInput | Prisma.AccountWhereUniqueInput[]
+  connect?: Prisma.AccountWhereUniqueInput | Prisma.AccountWhereUniqueInput[]
+  update?: Prisma.AccountUpdateWithWhereUniqueWithoutParentInput | Prisma.AccountUpdateWithWhereUniqueWithoutParentInput[]
+  updateMany?: Prisma.AccountUpdateManyWithWhereWithoutParentInput | Prisma.AccountUpdateManyWithWhereWithoutParentInput[]
+  deleteMany?: Prisma.AccountScalarWhereInput | Prisma.AccountScalarWhereInput[]
+}
+
+export type AccountUncheckedUpdateManyWithoutParentNestedInput = {
+  create?: Prisma.XOR<Prisma.AccountCreateWithoutParentInput, Prisma.AccountUncheckedCreateWithoutParentInput> | Prisma.AccountCreateWithoutParentInput[] | Prisma.AccountUncheckedCreateWithoutParentInput[]
+  connectOrCreate?: Prisma.AccountCreateOrConnectWithoutParentInput | Prisma.AccountCreateOrConnectWithoutParentInput[]
+  upsert?: Prisma.AccountUpsertWithWhereUniqueWithoutParentInput | Prisma.AccountUpsertWithWhereUniqueWithoutParentInput[]
+  createMany?: Prisma.AccountCreateManyParentInputEnvelope
+  set?: Prisma.AccountWhereUniqueInput | Prisma.AccountWhereUniqueInput[]
+  disconnect?: Prisma.AccountWhereUniqueInput | Prisma.AccountWhereUniqueInput[]
+  delete?: Prisma.AccountWhereUniqueInput | Prisma.AccountWhereUniqueInput[]
+  connect?: Prisma.AccountWhereUniqueInput | Prisma.AccountWhereUniqueInput[]
+  update?: Prisma.AccountUpdateWithWhereUniqueWithoutParentInput | Prisma.AccountUpdateWithWhereUniqueWithoutParentInput[]
+  updateMany?: Prisma.AccountUpdateManyWithWhereWithoutParentInput | Prisma.AccountUpdateManyWithWhereWithoutParentInput[]
+  deleteMany?: Prisma.AccountScalarWhereInput | Prisma.AccountScalarWhereInput[]
 }
 
 export type AccountCreateNestedOneWithoutTransactionsInput = {
@@ -572,6 +661,8 @@ export type AccountCreateWithoutUserInput = {
   color?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  parent?: Prisma.AccountCreateNestedOneWithoutChildrenInput
+  children?: Prisma.AccountCreateNestedManyWithoutParentInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionCreateNestedManyWithoutToAccountInput
 }
@@ -585,6 +676,8 @@ export type AccountUncheckedCreateWithoutUserInput = {
   color?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  parentId?: string | null
+  children?: Prisma.AccountUncheckedCreateNestedManyWithoutParentInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionUncheckedCreateNestedManyWithoutToAccountInput
 }
@@ -626,7 +719,139 @@ export type AccountScalarWhereInput = {
   color?: Prisma.StringNullableFilter<"Account"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Account"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Account"> | Date | string
+  parentId?: Prisma.StringNullableFilter<"Account"> | string | null
   userId?: Prisma.StringFilter<"Account"> | string
+}
+
+export type AccountCreateWithoutChildrenInput = {
+  id?: string
+  name: string
+  balance?: number
+  uangGoib?: number
+  icon?: string | null
+  color?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  parent?: Prisma.AccountCreateNestedOneWithoutChildrenInput
+  user: Prisma.UserCreateNestedOneWithoutAccountsInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
+  transfersIn?: Prisma.TransactionCreateNestedManyWithoutToAccountInput
+}
+
+export type AccountUncheckedCreateWithoutChildrenInput = {
+  id?: string
+  name: string
+  balance?: number
+  uangGoib?: number
+  icon?: string | null
+  color?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  parentId?: string | null
+  userId: string
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
+  transfersIn?: Prisma.TransactionUncheckedCreateNestedManyWithoutToAccountInput
+}
+
+export type AccountCreateOrConnectWithoutChildrenInput = {
+  where: Prisma.AccountWhereUniqueInput
+  create: Prisma.XOR<Prisma.AccountCreateWithoutChildrenInput, Prisma.AccountUncheckedCreateWithoutChildrenInput>
+}
+
+export type AccountCreateWithoutParentInput = {
+  id?: string
+  name: string
+  balance?: number
+  uangGoib?: number
+  icon?: string | null
+  color?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  children?: Prisma.AccountCreateNestedManyWithoutParentInput
+  user: Prisma.UserCreateNestedOneWithoutAccountsInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
+  transfersIn?: Prisma.TransactionCreateNestedManyWithoutToAccountInput
+}
+
+export type AccountUncheckedCreateWithoutParentInput = {
+  id?: string
+  name: string
+  balance?: number
+  uangGoib?: number
+  icon?: string | null
+  color?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  userId: string
+  children?: Prisma.AccountUncheckedCreateNestedManyWithoutParentInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
+  transfersIn?: Prisma.TransactionUncheckedCreateNestedManyWithoutToAccountInput
+}
+
+export type AccountCreateOrConnectWithoutParentInput = {
+  where: Prisma.AccountWhereUniqueInput
+  create: Prisma.XOR<Prisma.AccountCreateWithoutParentInput, Prisma.AccountUncheckedCreateWithoutParentInput>
+}
+
+export type AccountCreateManyParentInputEnvelope = {
+  data: Prisma.AccountCreateManyParentInput | Prisma.AccountCreateManyParentInput[]
+}
+
+export type AccountUpsertWithoutChildrenInput = {
+  update: Prisma.XOR<Prisma.AccountUpdateWithoutChildrenInput, Prisma.AccountUncheckedUpdateWithoutChildrenInput>
+  create: Prisma.XOR<Prisma.AccountCreateWithoutChildrenInput, Prisma.AccountUncheckedCreateWithoutChildrenInput>
+  where?: Prisma.AccountWhereInput
+}
+
+export type AccountUpdateToOneWithWhereWithoutChildrenInput = {
+  where?: Prisma.AccountWhereInput
+  data: Prisma.XOR<Prisma.AccountUpdateWithoutChildrenInput, Prisma.AccountUncheckedUpdateWithoutChildrenInput>
+}
+
+export type AccountUpdateWithoutChildrenInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  balance?: Prisma.FloatFieldUpdateOperationsInput | number
+  uangGoib?: Prisma.FloatFieldUpdateOperationsInput | number
+  icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parent?: Prisma.AccountUpdateOneWithoutChildrenNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutAccountsNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
+  transfersIn?: Prisma.TransactionUpdateManyWithoutToAccountNestedInput
+}
+
+export type AccountUncheckedUpdateWithoutChildrenInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  balance?: Prisma.FloatFieldUpdateOperationsInput | number
+  uangGoib?: Prisma.FloatFieldUpdateOperationsInput | number
+  icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
+  transfersIn?: Prisma.TransactionUncheckedUpdateManyWithoutToAccountNestedInput
+}
+
+export type AccountUpsertWithWhereUniqueWithoutParentInput = {
+  where: Prisma.AccountWhereUniqueInput
+  update: Prisma.XOR<Prisma.AccountUpdateWithoutParentInput, Prisma.AccountUncheckedUpdateWithoutParentInput>
+  create: Prisma.XOR<Prisma.AccountCreateWithoutParentInput, Prisma.AccountUncheckedCreateWithoutParentInput>
+}
+
+export type AccountUpdateWithWhereUniqueWithoutParentInput = {
+  where: Prisma.AccountWhereUniqueInput
+  data: Prisma.XOR<Prisma.AccountUpdateWithoutParentInput, Prisma.AccountUncheckedUpdateWithoutParentInput>
+}
+
+export type AccountUpdateManyWithWhereWithoutParentInput = {
+  where: Prisma.AccountScalarWhereInput
+  data: Prisma.XOR<Prisma.AccountUpdateManyMutationInput, Prisma.AccountUncheckedUpdateManyWithoutParentInput>
 }
 
 export type AccountCreateWithoutTransactionsInput = {
@@ -638,6 +863,8 @@ export type AccountCreateWithoutTransactionsInput = {
   color?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  parent?: Prisma.AccountCreateNestedOneWithoutChildrenInput
+  children?: Prisma.AccountCreateNestedManyWithoutParentInput
   user: Prisma.UserCreateNestedOneWithoutAccountsInput
   transfersIn?: Prisma.TransactionCreateNestedManyWithoutToAccountInput
 }
@@ -651,7 +878,9 @@ export type AccountUncheckedCreateWithoutTransactionsInput = {
   color?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  parentId?: string | null
   userId: string
+  children?: Prisma.AccountUncheckedCreateNestedManyWithoutParentInput
   transfersIn?: Prisma.TransactionUncheckedCreateNestedManyWithoutToAccountInput
 }
 
@@ -669,6 +898,8 @@ export type AccountCreateWithoutTransfersInInput = {
   color?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  parent?: Prisma.AccountCreateNestedOneWithoutChildrenInput
+  children?: Prisma.AccountCreateNestedManyWithoutParentInput
   user: Prisma.UserCreateNestedOneWithoutAccountsInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
 }
@@ -682,7 +913,9 @@ export type AccountUncheckedCreateWithoutTransfersInInput = {
   color?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  parentId?: string | null
   userId: string
+  children?: Prisma.AccountUncheckedCreateNestedManyWithoutParentInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
 }
 
@@ -711,6 +944,8 @@ export type AccountUpdateWithoutTransactionsInput = {
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parent?: Prisma.AccountUpdateOneWithoutChildrenNestedInput
+  children?: Prisma.AccountUpdateManyWithoutParentNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutAccountsNestedInput
   transfersIn?: Prisma.TransactionUpdateManyWithoutToAccountNestedInput
 }
@@ -724,7 +959,9 @@ export type AccountUncheckedUpdateWithoutTransactionsInput = {
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  children?: Prisma.AccountUncheckedUpdateManyWithoutParentNestedInput
   transfersIn?: Prisma.TransactionUncheckedUpdateManyWithoutToAccountNestedInput
 }
 
@@ -748,6 +985,8 @@ export type AccountUpdateWithoutTransfersInInput = {
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parent?: Prisma.AccountUpdateOneWithoutChildrenNestedInput
+  children?: Prisma.AccountUpdateManyWithoutParentNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutAccountsNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
 }
@@ -761,7 +1000,9 @@ export type AccountUncheckedUpdateWithoutTransfersInInput = {
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  children?: Prisma.AccountUncheckedUpdateManyWithoutParentNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
 }
 
@@ -774,6 +1015,7 @@ export type AccountCreateManyUserInput = {
   color?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  parentId?: string | null
 }
 
 export type AccountUpdateWithoutUserInput = {
@@ -785,6 +1027,8 @@ export type AccountUpdateWithoutUserInput = {
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parent?: Prisma.AccountUpdateOneWithoutChildrenNestedInput
+  children?: Prisma.AccountUpdateManyWithoutParentNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUpdateManyWithoutToAccountNestedInput
 }
@@ -798,6 +1042,8 @@ export type AccountUncheckedUpdateWithoutUserInput = {
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  children?: Prisma.AccountUncheckedUpdateManyWithoutParentNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUncheckedUpdateManyWithoutToAccountNestedInput
 }
@@ -811,6 +1057,61 @@ export type AccountUncheckedUpdateManyWithoutUserInput = {
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type AccountCreateManyParentInput = {
+  id?: string
+  name: string
+  balance?: number
+  uangGoib?: number
+  icon?: string | null
+  color?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  userId: string
+}
+
+export type AccountUpdateWithoutParentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  balance?: Prisma.FloatFieldUpdateOperationsInput | number
+  uangGoib?: Prisma.FloatFieldUpdateOperationsInput | number
+  icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  children?: Prisma.AccountUpdateManyWithoutParentNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutAccountsNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
+  transfersIn?: Prisma.TransactionUpdateManyWithoutToAccountNestedInput
+}
+
+export type AccountUncheckedUpdateWithoutParentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  balance?: Prisma.FloatFieldUpdateOperationsInput | number
+  uangGoib?: Prisma.FloatFieldUpdateOperationsInput | number
+  icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  children?: Prisma.AccountUncheckedUpdateManyWithoutParentNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
+  transfersIn?: Prisma.TransactionUncheckedUpdateManyWithoutToAccountNestedInput
+}
+
+export type AccountUncheckedUpdateManyWithoutParentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  balance?: Prisma.FloatFieldUpdateOperationsInput | number
+  uangGoib?: Prisma.FloatFieldUpdateOperationsInput | number
+  icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 
@@ -819,11 +1120,13 @@ export type AccountUncheckedUpdateManyWithoutUserInput = {
  */
 
 export type AccountCountOutputType = {
+  children: number
   transactions: number
   transfersIn: number
 }
 
 export type AccountCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  children?: boolean | AccountCountOutputTypeCountChildrenArgs
   transactions?: boolean | AccountCountOutputTypeCountTransactionsArgs
   transfersIn?: boolean | AccountCountOutputTypeCountTransfersInArgs
 }
@@ -836,6 +1139,13 @@ export type AccountCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Exte
    * Select specific fields to fetch from the AccountCountOutputType
    */
   select?: Prisma.AccountCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * AccountCountOutputType without action
+ */
+export type AccountCountOutputTypeCountChildrenArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AccountWhereInput
 }
 
 /**
@@ -862,7 +1172,10 @@ export type AccountSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   color?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  parentId?: boolean
   userId?: boolean
+  parent?: boolean | Prisma.Account$parentArgs<ExtArgs>
+  children?: boolean | Prisma.Account$childrenArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   transactions?: boolean | Prisma.Account$transactionsArgs<ExtArgs>
   transfersIn?: boolean | Prisma.Account$transfersInArgs<ExtArgs>
@@ -878,7 +1191,9 @@ export type AccountSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   color?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  parentId?: boolean
   userId?: boolean
+  parent?: boolean | Prisma.Account$parentArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["account"]>
 
@@ -891,7 +1206,9 @@ export type AccountSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   color?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  parentId?: boolean
   userId?: boolean
+  parent?: boolean | Prisma.Account$parentArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["account"]>
 
@@ -904,26 +1221,33 @@ export type AccountSelectScalar = {
   color?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  parentId?: boolean
   userId?: boolean
 }
 
-export type AccountOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "balance" | "uangGoib" | "icon" | "color" | "createdAt" | "updatedAt" | "userId", ExtArgs["result"]["account"]>
+export type AccountOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "balance" | "uangGoib" | "icon" | "color" | "createdAt" | "updatedAt" | "parentId" | "userId", ExtArgs["result"]["account"]>
 export type AccountInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  parent?: boolean | Prisma.Account$parentArgs<ExtArgs>
+  children?: boolean | Prisma.Account$childrenArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   transactions?: boolean | Prisma.Account$transactionsArgs<ExtArgs>
   transfersIn?: boolean | Prisma.Account$transfersInArgs<ExtArgs>
   _count?: boolean | Prisma.AccountCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type AccountIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  parent?: boolean | Prisma.Account$parentArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 export type AccountIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  parent?: boolean | Prisma.Account$parentArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 
 export type $AccountPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Account"
   objects: {
+    parent: Prisma.$AccountPayload<ExtArgs> | null
+    children: Prisma.$AccountPayload<ExtArgs>[]
     user: Prisma.$UserPayload<ExtArgs>
     transactions: Prisma.$TransactionPayload<ExtArgs>[]
     transfersIn: Prisma.$TransactionPayload<ExtArgs>[]
@@ -937,6 +1261,7 @@ export type $AccountPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     color: string | null
     createdAt: Date
     updatedAt: Date
+    parentId: string | null
     userId: string
   }, ExtArgs["result"]["account"]>
   composites: {}
@@ -1332,6 +1657,8 @@ readonly fields: AccountFieldRefs;
  */
 export interface Prisma__AccountClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  parent<T extends Prisma.Account$parentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Account$parentArgs<ExtArgs>>): Prisma.Prisma__AccountClient<runtime.Types.Result.GetResult<Prisma.$AccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  children<T extends Prisma.Account$childrenArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Account$childrenArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   transactions<T extends Prisma.Account$transactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Account$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   transfersIn<T extends Prisma.Account$transfersInArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Account$transfersInArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -1372,6 +1699,7 @@ export interface AccountFieldRefs {
   readonly color: Prisma.FieldRef<"Account", 'String'>
   readonly createdAt: Prisma.FieldRef<"Account", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Account", 'DateTime'>
+  readonly parentId: Prisma.FieldRef<"Account", 'String'>
   readonly userId: Prisma.FieldRef<"Account", 'String'>
 }
     
@@ -1769,6 +2097,49 @@ export type AccountDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * Limit how many Accounts to delete.
    */
   limit?: number
+}
+
+/**
+ * Account.parent
+ */
+export type Account$parentArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Account
+   */
+  select?: Prisma.AccountSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Account
+   */
+  omit?: Prisma.AccountOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AccountInclude<ExtArgs> | null
+  where?: Prisma.AccountWhereInput
+}
+
+/**
+ * Account.children
+ */
+export type Account$childrenArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Account
+   */
+  select?: Prisma.AccountSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Account
+   */
+  omit?: Prisma.AccountOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AccountInclude<ExtArgs> | null
+  where?: Prisma.AccountWhereInput
+  orderBy?: Prisma.AccountOrderByWithRelationInput | Prisma.AccountOrderByWithRelationInput[]
+  cursor?: Prisma.AccountWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AccountScalarFieldEnum | Prisma.AccountScalarFieldEnum[]
 }
 
 /**

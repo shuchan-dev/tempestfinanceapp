@@ -21,6 +21,8 @@ export interface AccountData {
   uangGoib: number;
   icon?: string | null;
   color?: string | null;
+  parentId?: string | null;
+  children?: AccountData[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -63,6 +65,17 @@ export interface BudgetData {
   spent?: number; // Diisi oleh analytics API
 }
 
+/** Data pembayaran hutang/piutang (angsuran) */
+export interface DebtPaymentData {
+  id: string;
+  amount: number;
+  date: Date;
+  debtId: string;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 /** Data hutang/piutang */
 export interface DebtData {
   id: string;
@@ -73,6 +86,7 @@ export interface DebtData {
   dueDate?: Date | null;
   isPaid: boolean;
   paidAt?: Date | null;
+  payments?: DebtPaymentData[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -114,6 +128,7 @@ export interface CreateAccountPayload {
   balance?: number;
   icon?: string;
   color?: string;
+  parentId?: string;
 }
 
 export interface CreateBudgetPayload {
@@ -128,6 +143,12 @@ export interface CreateDebtPayload {
   amount: number;
   description?: string;
   dueDate?: string;
+}
+
+export interface CreateDebtPaymentPayload {
+  debtId: string;
+  amount: number;
+  date?: string;
 }
 
 // ============================================================

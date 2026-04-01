@@ -16,7 +16,7 @@ import {
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
-import type { DebtData, DebtType } from "@/types";
+import type { DebtData, DebtType, DebtPaymentData } from "@/types";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -35,11 +35,53 @@ export default function DebtsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paidLoadingId, setPaidLoadingId] = useState<string | null>(null);
 
-  const totalActive = debts.filter((d) => !d.isPaid).reduce((s, d) => s + d.amount, 0);
+  const [addingPaymentId, setAddingPaymentId] = useState<string | null>(null);
+  const [paymentForm, setPaymentForm] = useState({ amount: "", date: "" });
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+
+  const totalActive = debts.filter((d) => !d.isPaid).reduce((s, d) => {
+    const totalPaid = d.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
+    return s + (d.amount - totalPaid);
+  }, 0);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/[^0-9]/g, "");
     setForm((f) => ({ ...f, amount: raw ? new Intl.NumberFormat("id-ID").format(Number(raw)) : "" }));
+  };
+
+  const handlePaymentAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^0-9]/g, "");
+    setPaymentForm((f) => ({ ...f, amount: raw ? new Intl.NumberFormat("id-ID").format(Number(raw)) : "" }));
+  };
+
+  const handleAddPayment = async (e: React.FormEvent, debtId: string, remaining: number) => {
+    e.preventDefault();
+    const numericAmount = Number(paymentForm.amount.replace(/[^0-9]/g, ""));
+    if (!numericAmount) { toast.error("Nominal harus diisi!"); return; }
+    if (numericAmount > remaining) { toast.error("Nominal melebihi sisa hutang/piutang!"); return; }
+
+    setIsSubmittingPayment(true);
+    try {
+      const res = await fetch("/api/debts/payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          debtId,
+          amount: numericAmount,
+          date: paymentForm.date || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Realisasi pembayaran berhasil dicatat!");
+        setAddingPaymentId(null);
+        setPaymentForm({ amount: "", date: "" });
+        mutate();
+      } else {
+        toast.error(data.error);
+      }
+    } catch { toast.error("Masalah jaringan"); }
+    finally { setIsSubmittingPayment(false); }
   };
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -208,11 +250,14 @@ export default function DebtsPage() {
         ) : (
           debts.map((debt) => {
             const isOverdue = debt.dueDate && !debt.isPaid && new Date(debt.dueDate) < new Date();
+            const totalPaid = debt.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
+            const remaining = debt.amount - totalPaid;
+
             return (
               <div
                 key={debt.id}
                 className={cn(
-                  "p-4 rounded-2xl border shadow-sm transition-all",
+                  "p-4 rounded-2xl border shadow-sm transition-all flex flex-col gap-4",
                   debt.isPaid
                     ? "bg-zinc-50 dark:bg-zinc-900/30 border-zinc-100 dark:border-zinc-800 opacity-60"
                     : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800",
@@ -274,6 +319,53 @@ export default function DebtsPage() {
                       </AlertDialogContent>
                     </AlertDialog>
                   </div>
+                </div>
+
+                {/* Progress Pembayaran & Form */}
+                <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex flex-col gap-3">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-zinc-500">Telah dibayar: <span className="font-semibold text-zinc-700 dark:text-zinc-300">{formatCurrency(totalPaid)}</span></span>
+                    <span className="text-zinc-500">Sisa: <span className="font-semibold text-zinc-900 dark:text-zinc-100">{formatCurrency(remaining)}</span></span>
+                  </div>
+
+                  {debt.payments && debt.payments.length > 0 && (
+                    <div className="bg-zinc-50 dark:bg-zinc-900/40 rounded-xl p-3 space-y-2">
+                      <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Riwayat Realisasi</p>
+                      {debt.payments.map((p) => (
+                        <div key={p.id} className="flex justify-between items-center text-xs">
+                          <span className="text-zinc-500 font-medium">{formatDate(p.date)}</span>
+                          <span className="font-semibold text-zinc-700 dark:text-zinc-300">{formatCurrency(p.amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {!debt.isPaid && remaining > 0 && (
+                    addingPaymentId === debt.id ? (
+                      <form onSubmit={(e) => handleAddPayment(e, debt.id, remaining)} className="bg-white dark:bg-zinc-900 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-2 shadow-sm">
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-400 text-xs">Rp</span>
+                            <Input autoFocus value={paymentForm.amount} onChange={handlePaymentAmountChange} className="pl-7 text-xs h-8 rounded-lg" placeholder="0" />
+                          </div>
+                          <Input type="date" value={paymentForm.date} onChange={(e) => setPaymentForm(f => ({...f, date: e.target.value}))} className="w-32 text-xs h-8 rounded-lg" />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button type="button" variant="ghost" size="sm" className="flex-1 h-8 text-xs rounded-lg" onClick={() => setAddingPaymentId(null)}>Batal</Button>
+                          <Button type="submit" size="sm" className="flex-1 h-8 text-xs rounded-lg" disabled={isSubmittingPayment}>
+                            {isSubmittingPayment ? <Loader2 className="w-3 h-3 animate-spin"/> : "Simpan"}
+                          </Button>
+                        </div>
+                      </form>
+                    ) : (
+                      <Button variant="outline" size="sm" className="w-full text-xs rounded-xl h-8 text-zinc-600 dark:text-zinc-400" onClick={() => {
+                        setAddingPaymentId(debt.id);
+                        setPaymentForm({ amount: "", date: "" });
+                      }}>
+                        <Plus className="w-3 h-3 mr-1" /> Tambah Realisasi
+                      </Button>
+                    )
+                  )}
                 </div>
               </div>
             );

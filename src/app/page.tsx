@@ -27,7 +27,11 @@ export default function Dashboard() {
   const accounts = accountsRes?.data || [];
   const transactions = txRes?.data || [];
 
-  const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const totalBalance = accounts.reduce((sum, acc) => {
+    const parentBalance = acc.balance;
+    const childrenBalance = acc.children?.reduce((cSum, c) => cSum + c.balance, 0) || 0;
+    return sum + parentBalance + childrenBalance;
+  }, 0);
 
   return (
     <div className="flex flex-col gap-6 p-6 pt-10 pb-32">
@@ -75,12 +79,17 @@ export default function Dashboard() {
                   {acc.name}
                 </span>
               </div>
-              <div className="flex flex-col mt-auto gap-1">
-                <span className="text-xl font-bold tracking-tight text-white">
-                  {formatCurrency(acc.balance)}
+              <div className="flex flex-col mt-auto gap-0">
+                <span className="text-xl font-bold tracking-tight text-white mb-1">
+                  {formatCurrency(acc.balance + (acc.children?.reduce((s, c) => s + c.balance, 0) || 0))}
                 </span>
+                {acc.children && acc.children.length > 0 && (
+                  <span className="text-[10px] font-medium text-white/70 bg-white/10 px-2 py-0.5 rounded-md w-max border border-white/5">
+                    {acc.children.length} Kantong
+                  </span>
+                )}
                 {acc.uangGoib > 0 && (
-                  <span className="text-[12px] font-bold text-red-400 bg-red-950/40 px-2 py-0.5 rounded-full w-max">
+                  <span className="text-[12px] font-bold text-red-400 bg-red-950/40 px-2 py-0.5 rounded-full w-max mt-1.5">
                     Uang goib: {formatCurrency(acc.uangGoib)}
                   </span>
                 )}

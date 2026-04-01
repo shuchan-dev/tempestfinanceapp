@@ -44,6 +44,9 @@ export async function GET(req: NextRequest): Promise<NextResponse<ApiResponse<De
         ...(type && { type }),
         ...(isPaid !== undefined && { isPaid }),
       },
+      include: {
+        payments: { orderBy: { date: "desc" } },
+      },
       orderBy: [{ isPaid: "asc" }, { createdAt: "desc" }],
     });
 

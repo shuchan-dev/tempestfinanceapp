@@ -71,3 +71,8 @@ export type Budget = Prisma.BudgetModel
  * 
  */
 export type Debt = Prisma.DebtModel
+/**
+ * Model DebtPayment
+ * 
+ */
+export type DebtPayment = Prisma.DebtPaymentModel
