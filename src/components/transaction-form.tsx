@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { toast } from "sonner";
-import { Loader2, CalendarIcon } from "lucide-react";
+import { Loader2, CalendarIcon, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
@@ -210,8 +210,8 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
     }}>
       <DialogTrigger asChild>
         {children || (
-          <Button size="icon" className="h-14 w-14 rounded-full shadow-lg">
-            +
+          <Button size="icon-lg" className="h-12 w-12 rounded-full shadow-lg">
+            <Plus className="size-9" />
           </Button>
         )}
       </DialogTrigger>
@@ -303,11 +303,27 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
                 className="w-full rounded-xl border-zinc-200 bg-white p-3 text-sm shadow-sm focus:ring-2 focus:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-900"
               >
                 <option value="" disabled>Pilih Akun...</option>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.icon} {a.name} ({new Intl.NumberFormat("id-ID").format(a.balance)})
-                  </option>
-                ))}
+                {accounts.map((a) => {
+                  if (a.children && a.children.length > 0) {
+                    return (
+                      <optgroup key={a.id} label={`${a.icon || "🏦"} ${a.name}`}>
+                        <option value={a.id}>
+                          {a.name} Utama ({new Intl.NumberFormat("id-ID").format(a.balance)})
+                        </option>
+                        {a.children.map(child => (
+                          <option key={child.id} value={child.id}>
+                            |_ {child.icon ? `${child.icon} ` : "👛 "}{child.name} ({new Intl.NumberFormat("id-ID").format(child.balance)})
+                          </option>
+                        ))}
+                      </optgroup>
+                    )
+                  }
+                  return (
+                    <option key={a.id} value={a.id}>
+                      {a.icon || "💳"} {a.name} ({new Intl.NumberFormat("id-ID").format(a.balance)})
+                    </option>
+                  )
+                })}
               </select>
             </div>
 
@@ -322,11 +338,28 @@ export function TransactionForm({ children, onSuccess }: TransactionFormProps) {
                     className="w-full rounded-xl border-blue-200 bg-blue-50/50 p-3 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 dark:border-blue-900/50 dark:bg-blue-900"
                   >
                     <option value="" disabled>Pilih Akun Tujuan...</option>
-                    {accounts.filter(a => a.id !== accountId).map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.icon} {a.name}
-                      </option>
-                    ))}
+                    {accounts.map((a) => {
+                      if (a.children && a.children.length > 0) {
+                        return (
+                          <optgroup key={a.id} label={`${a.icon || "🏦"} ${a.name}`}>
+                            {a.id !== accountId && (
+                              <option value={a.id}>{a.name} Utama</option>
+                            )}
+                            {a.children.filter(child => child.id !== accountId).map(child => (
+                              <option key={child.id} value={child.id}>
+                                |_ {child.icon ? `${child.icon} ` : "👛 "}{child.name}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )
+                      }
+                      if (a.id === accountId) return null;
+                      return (
+                        <option key={a.id} value={a.id}>
+                          {a.icon || "💳"} {a.name}
+                        </option>
+                      )
+                    })}
                   </select>
                 </div>
 

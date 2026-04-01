@@ -37,6 +37,7 @@ export default function SettingsPage() {
   const [isAddingAccount, setIsAddingAccount] = useState(false);
   const [newAccountName, setNewAccountName] = useState("");
   const [newAccountBalance, setNewAccountBalance] = useState("");
+  const [newAccountParentId, setNewAccountParentId] = useState<string | undefined>(undefined);
   
   // State for Categories
   const [isAddingCat, setIsAddingCat] = useState(false);
@@ -84,6 +85,7 @@ export default function SettingsPage() {
           balance: numericBalance,
           icon: "💳", // Default
           color: "#3b82f6", // Default blue
+          parentId: newAccountParentId,
         }),
       });
 
@@ -93,6 +95,7 @@ export default function SettingsPage() {
         setIsAddingAccount(false);
         setNewAccountName("");
         setNewAccountBalance("");
+        setNewAccountParentId(undefined);
         mutate(); // refresh accounts config
       } else {
         toast.error(data.error || "Gagal menambah akun");
@@ -219,7 +222,10 @@ export default function SettingsPage() {
             Daftar Akun Anda
           </h2>
           {!isAddingAccount && (
-            <Button size="sm" onClick={() => setIsAddingAccount(true)} className="rounded-full bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
+            <Button size="sm" onClick={() => {
+              setNewAccountParentId(undefined);
+              setIsAddingAccount(true);
+            }} className="rounded-full bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
               <Plus className="w-4 h-4 mr-1" />
               Akun Baru
             </Button>
@@ -233,9 +239,16 @@ export default function SettingsPage() {
             className={cn("bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-blue-200 dark:border-blue-900/50 shadow-sm space-y-4 relative overflow-hidden", shake && "animate-shake")}
           >
             <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">Tambah Akun Baru</h3>
+            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
+              {newAccountParentId ? "Tambah Kantong Akun" : "Tambah Akun Baru"}
+            </h3>
             
             <div className="space-y-3">
+              {newAccountParentId && (
+                <div className="text-xs text-zinc-500 border border-zinc-200 dark:border-zinc-800 rounded-md p-2 bg-zinc-50 dark:bg-zinc-900">
+                  Kantong untuk: <strong>{accounts.find(a => a.id === newAccountParentId)?.name}</strong>
+                </div>
+              )}
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-zinc-500 uppercase">Nama Akun</label>
                 <Input 
@@ -269,7 +282,10 @@ export default function SettingsPage() {
                 type="button" 
                 variant="outline" 
                 className="flex-1 rounded-xl border-zinc-200"
-                onClick={() => setIsAddingAccount(false)}
+                onClick={() => {
+                  setIsAddingAccount(false);
+                  setNewAccountParentId(undefined);
+                }}
                 disabled={isSubmittingAccount}
               >
                 Batal
@@ -295,49 +311,109 @@ export default function SettingsPage() {
             </div>
           ) : (
             accounts.map((acc) => (
-              <div key={acc.id} className="flex items-center justify-between p-4 rounded-2xl bg-white shadow-sm border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 min-w-10 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-lg">
-                    {acc.icon || "💳"}
+              <div key={acc.id} className="flex flex-col p-4 rounded-2xl bg-white shadow-sm border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 min-w-10 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-lg">
+                      {acc.icon || "💳"}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-zinc-900 dark:text-zinc-100">{acc.name}</span>
+                      <span className="text-xs text-zinc-500">Saldo Utama: {formatCurrency(acc.balance)}</span>
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">{acc.name}</span>
-                    <span className="text-xs text-zinc-500">Saldo: {formatCurrency(acc.balance)}</span>
+                  
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setNewAccountParentId(acc.id);
+                        setIsAddingAccount(true);
+                      }}
+                      className="text-xs h-8 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                    >
+                      + Kantong
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          disabled={deletingId === acc.id}
+                          className="text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                          title="Hapus Akun"
+                        >
+                          {deletingId === acc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="w-[90vw] max-w-md rounded-2xl">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Hapus Akun {acc.name}?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tindakan ini tidak dapat dibatalkan. Menghapus akun ini juga akan 
+                            menghapus catatan transaksi yang terkait dengannya dan seluruh kantong yang bernaung. Total saldo akun + kantong harus Rp 0.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleDeleteAccount(acc.id)}
+                            className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
+                          >
+                            Ya, Hapus
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
-                
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      disabled={deletingId === acc.id || acc.balance !== 0}
-                      className="text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-                      title={acc.balance !== 0 ? "Saldo harus 0 untuk menghapus akun" : "Hapus Akun"}
-                    >
-                      {deletingId === acc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="w-[90vw] max-w-md rounded-2xl">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Hapus Akun {acc.name}?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Tindakan ini tidak dapat dibatalkan. Menghapus akun ini juga akan 
-                        menghapus catatan transaksi (histori) yang terkait dengannya demi
-                        menjaga konsistensi data secara offline.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={() => handleDeleteAccount(acc.id)}
-                        className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
-                      >
-                        Ya, Hapus
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+
+                {acc.children && acc.children.length > 0 && (
+                  <div className="ml-6 flex flex-col gap-2 border-l-2 border-zinc-100 dark:border-zinc-800 pl-4 py-1 mt-1">
+                    {acc.children.map((child) => (
+                      <div key={child.id} className="flex items-center justify-between p-2 rounded-lg bg-zinc-50 dark:bg-zinc-950/50">
+                        <div className="flex items-center gap-3">
+                          <div className="text-lg w-6 text-center">{child.icon || "👛"}</div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{child.name}</span>
+                            <span className="text-xs text-zinc-500">{formatCurrency(child.balance)}</span>
+                          </div>
+                        </div>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              disabled={deletingId === child.id}
+                              className="h-8 w-8 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                              title="Hapus Kantong"
+                            >
+                              {deletingId === child.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="w-[90vw] max-w-md rounded-2xl">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Hapus Kantong {child.name}?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Anda yakin ingin menghapus kantong ini? Pastikan saldo = 0.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDeleteAccount(child.id)}
+                                className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
+                              >
+                                Ya, Hapus
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))
           )}
