@@ -1,21 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getUserId } from "@/lib/session";
+import { resolveUserId } from "@/lib/api-utils";
 import type { ApiResponse, CreateDebtPaymentPayload, DebtPaymentData } from "@/types";
-
-async function resolveUserId() {
-  const userId = await getUserId();
-  if (!userId) {
-    return {
-      userId: null,
-      error: NextResponse.json(
-        { success: false as const, error: "Tidak terautentikasi" },
-        { status: 401 }
-      ),
-    };
-  }
-  return { userId, error: null };
-}
 
 // ─── POST /api/debts/payments ──────────────────────────────────────
 export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<DebtPaymentData>>> {
@@ -40,7 +26,6 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<D
 
     const debt = await db.debt.findFirst({
       where: { id: body.debtId, userId: userId! },
-      include: { payments: true },
     });
 
     if (!debt) {
@@ -50,8 +35,12 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<D
       );
     }
 
-    // Hitung total sisa pembayaran
-    const totalPaid = debt.payments.reduce((acc, p) => acc + p.amount, 0);
+    // Hitung total sisa pembayaran menggunakan query database
+    const paymentAgg = await db.debtPayment.aggregate({
+      _sum: { amount: true },
+      where: { debtId: debt.id },
+    });
+    const totalPaid = paymentAgg._sum.amount ?? 0;
     const remaining = debt.amount - totalPaid;
 
     if (body.amount > remaining) {
@@ -129,10 +118,11 @@ export async function DELETE(req: NextRequest): Promise<NextResponse<ApiResponse
 
     // Jika tadinya lunas, cek apakah skrg jadi belum lunas (kurang dari amount)
     if (payment.debt.isPaid) {
-      const remainingPayments = await db.debtPayment.findMany({
+      const remainingAgg = await db.debtPayment.aggregate({
+        _sum: { amount: true },
         where: { debtId: payment.debt.id },
       });
-      const totalPaid = remainingPayments.reduce((acc, p) => acc + p.amount, 0);
+      const totalPaid = remainingAgg._sum.amount ?? 0;
       if (totalPaid < payment.debt.amount) {
         await db.debt.update({
           where: { id: payment.debt.id },

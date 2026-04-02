@@ -10,15 +10,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getUserId } from "@/lib/session";
+import { resolveUserId } from "@/lib/api-utils";
 import type { CreateTransactionPayload, ApiResponse, TransactionData } from "@/types";
-
-// ─── Helper: Ambil userId dari sesi atau kembalikan error ─────
-async function resolveUserId() {
-  const userId = await getUserId();
-  if (!userId) return { userId: null, error: NextResponse.json({ success: false as const, error: "Tidak terautentikasi" }, { status: 401 }) };
-  return { userId, error: null };
-}
+import { createTransaction } from "@/services/transactionService";
 
 // ─── GET /api/transactions ────────────────────────────────────
 /**
@@ -112,85 +106,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<T
       }
     }
 
-    // ── Operasi Atomik via Prisma $transaction ─────────────
-    const result = await db.$transaction(async (tx: any) => {
-      // 1. Simpan data transaksi dengan userId
-      const transaction = await tx.transaction.create({
-        data: {
-          amount: body.amount,
-          type: body.type,
-          description: body.description,
-          date: body.date ? new Date(body.date) : new Date(),
-          isSynced: false,
-          userId: userId!,
-          accountId: body.accountId,
-          categoryId: body.categoryId?.trim() ? body.categoryId : undefined,
-          toAccountId: body.toAccountId?.trim() ? body.toAccountId : undefined,
-          adminFee: body.adminFee ?? 0, // Admin fee di set 0 karena dicatat sebagai transaksi terpisah 
-        },
-        include: {
-          account: { select: { id: true, name: true, icon: true, color: true } },
-          category: { select: { id: true, name: true, icon: true } },
-          toAccount: { select: { id: true, name: true, icon: true, color: true } },
-        },
-      });
-
-      // 1b. Jika TRANSFER dan ada admin fee, catat sebagai pengeluaran terpisah
-      if (body.type === "TRANSFER" && body.adminFee && body.adminFee > 0) {
-        await tx.transaction.create({
-          data: {
-            amount: body.adminFee,
-            type: "EXPENSE",
-            description: `Biaya Admin Transfer${body.description ? ' (' + body.description + ')' : ''}`,
-            date: body.date ? new Date(body.date) : new Date(),
-            isSynced: false,
-            userId: userId!,
-            accountId: body.accountId,
-            // categoryId tidak diisi (Tanpa Kategori) agar bisa diedit nanti atau masuk kategori default admin
-          }
-        });
-      }
-
-      // 2. Update Saldo dengan logika Uang Goib
-      const account = await tx.account.findUnique({ where: { id: body.accountId } });
-      if (!account) throw new Error("Akun sumber tidak ditemukan");
-
-      if (body.type === "INCOME") {
-        if (account.uangGoib > 0) {
-          if (body.amount > account.uangGoib) {
-            await tx.account.update({ where: { id: body.accountId }, data: { uangGoib: 0, balance: { increment: body.amount - account.uangGoib } } });
-          } else {
-            await tx.account.update({ where: { id: body.accountId }, data: { uangGoib: { decrement: body.amount } } });
-          }
-        } else {
-          await tx.account.update({ where: { id: body.accountId }, data: { balance: { increment: body.amount } } });
-        }
-      } else if (body.type === "EXPENSE") {
-        const deductible = Math.min(body.amount, account.balance);
-        const goibAddition = body.amount - deductible;
-        await tx.account.update({ where: { id: body.accountId }, data: { balance: { decrement: deductible }, uangGoib: { increment: goibAddition } } });
-      } else if (body.type === "TRANSFER" && body.toAccountId) {
-        const totalOut = body.amount + (body.adminFee ?? 0);
-        const deductible = Math.min(totalOut, account.balance);
-        const goibAddition = totalOut - deductible;
-        await tx.account.update({ where: { id: body.accountId }, data: { balance: { decrement: deductible }, uangGoib: { increment: goibAddition } } });
-
-        const targetAccount = await tx.account.findUnique({ where: { id: body.toAccountId } });
-        if (!targetAccount) throw new Error("Akun tujuan tidak ditemukan");
-
-        if (targetAccount.uangGoib > 0) {
-          if (body.amount > targetAccount.uangGoib) {
-            await tx.account.update({ where: { id: body.toAccountId }, data: { uangGoib: 0, balance: { increment: body.amount - targetAccount.uangGoib } } });
-          } else {
-            await tx.account.update({ where: { id: body.toAccountId }, data: { uangGoib: { decrement: body.amount } } });
-          }
-        } else {
-          await tx.account.update({ where: { id: body.toAccountId }, data: { balance: { increment: body.amount } } });
-        }
-      }
-
-      return transaction;
-    }, { maxWait: 10000, timeout: 20000 });
+    // ── Operasi Atomik via Prisma $transaction ditarik ke Service Layer ─────────────
+    const result = await createTransaction(userId!, body);
 
     return NextResponse.json({ success: true, data: result as TransactionData }, { status: 201 });
   } catch (error) {

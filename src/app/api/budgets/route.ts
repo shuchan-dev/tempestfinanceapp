@@ -8,21 +8,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getUserId } from "@/lib/session";
+import { resolveUserId } from "@/lib/api-utils";
 import type { ApiResponse, BudgetData, CreateBudgetPayload } from "@/types";
-
-async function resolveUserId() {
-  const userId = await getUserId();
-  if (!userId)
-    return {
-      userId: null,
-      error: NextResponse.json(
-        { success: false as const, error: "Tidak terautentikasi" },
-        { status: 401 },
-      ),
-    };
-  return { userId, error: null };
-}
 
 // ─── GET /api/budgets ─────────────────────────────────────────
 export async function GET(): Promise<NextResponse<ApiResponse<BudgetData[]>>> {

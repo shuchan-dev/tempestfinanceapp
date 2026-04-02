@@ -79,30 +79,40 @@ export async function GET(): Promise<NextResponse<ApiResponse<AnalyticsData>>> {
       include: { category: true },
     });
 
-    const budgetProgress = await Promise.all(
-      budgets.map(async (budget) => {
-        const spentAgg = await db.transaction.aggregate({
-          where: {
-            userId,
-            categoryId: budget.categoryId,
-            type: "EXPENSE",
-            date: { gte: startOfMonth },
-          },
-          _sum: { amount: true },
-        });
-        const spent = spentAgg._sum.amount ?? 0;
-        const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
-        return {
-          id: budget.id,
-          amount: budget.amount,
-          period: budget.period as "MONTHLY" | "WEEKLY",
-          categoryId: budget.categoryId,
-          category: budget.category as any,
-          spent,
-          percentage: Math.round(percentage),
-        };
-      }),
-    );
+    const categoryIds = budgets.map((b) => b.categoryId);
+
+    // Batch query: get expense sums for all matching categories in one go
+    const groupedTransactions = await db.transaction.groupBy({
+      by: ["categoryId"],
+      where: {
+        userId,
+        categoryId: { in: categoryIds },
+        type: "EXPENSE",
+        date: { gte: startOfMonth },
+      },
+      _sum: { amount: true },
+    });
+
+    const spentMap = new Map<string, number>();
+    for (const group of groupedTransactions) {
+      if (group.categoryId) {
+        spentMap.set(group.categoryId, group._sum.amount ?? 0);
+      }
+    }
+
+    const budgetProgress = budgets.map((budget) => {
+      const spent = spentMap.get(budget.categoryId) ?? 0;
+      const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+      return {
+        id: budget.id,
+        amount: budget.amount,
+        period: budget.period as "MONTHLY" | "WEEKLY",
+        categoryId: budget.categoryId,
+        category: budget.category as any,
+        spent,
+        percentage: Math.round(percentage),
+      };
+    });
 
     return NextResponse.json({
       success: true,
