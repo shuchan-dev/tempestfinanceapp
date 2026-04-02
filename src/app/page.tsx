@@ -1,6 +1,6 @@
 "use client";
 
-import useSWR from "swr";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import {
   formatCurrency,
   formatRelativeDate,
@@ -8,31 +8,14 @@ import {
   getTransactionSign,
 } from "@/lib/utils";
 import { TransactionForm } from "@/components/transaction-form";
-import type { AccountData, TransactionData } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Receipt, AlertCircle, ArrowRightLeft } from "lucide-react";
 import Link from "next/link";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 
 export default function Dashboard() {
-  const { data: accountsRes, isLoading: accountsLoading } = useSWR<{
-    data: AccountData[];
-  }>("/api/accounts", fetcher);
-  const { data: txRes, isLoading: txLoading } = useSWR<{ data: TransactionData[] }>(
-    "/api/transactions?limit=10",
-    fetcher,
-  );
-
-  const accounts = accountsRes?.data || [];
-  const transactions = txRes?.data || [];
-
-  const totalBalance = accounts.reduce((sum, acc) => {
-    const parentBalance = acc.balance;
-    const childrenBalance = acc.children?.reduce((cSum, c) => cSum + c.balance, 0) || 0;
-    return sum + parentBalance + childrenBalance;
-  }, 0);
-
+  const { accounts, transactions, totalBalance, accountsLoading, txLoading } = useDashboardData();
   return (
     <div className="flex flex-col gap-6 p-6 pt-10 pb-32">
       {/* Header section (Total Balance) */}
