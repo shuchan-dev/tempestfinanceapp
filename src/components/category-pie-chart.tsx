@@ -72,10 +72,10 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
           </Pie>
           <Tooltip
             contentStyle={{
-              backgroundColor: "rgb(24, 24, 27)",
-              border: "1px solid rgb(39, 39, 42)",
+              backgroundColor: "var(--tooltip-bg, white)",
+              border: "1px solid var(--tooltip-border, #e4e4e7)",
               borderRadius: "8px",
-              color: "white",
+              color: "var(--tooltip-text, #18181b)",
             }}
           />
           <Legend />

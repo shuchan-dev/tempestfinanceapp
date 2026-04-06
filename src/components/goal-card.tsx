@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit2 } from "lucide-react";
 import { useState } from "react";
 import { useSWRConfig } from "swr";
 import { toast } from "sonner";
@@ -17,6 +17,9 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { GoalForm } from "@/components/goal-form";
 
 interface GoalCardProps {
   goal: GoalData;
@@ -26,6 +29,8 @@ interface GoalCardProps {
 export function GoalCard({ goal, onUpdate }: GoalCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [updateAmount, setUpdateAmount] = useState("");
+  const [isUpdatingAmount, setIsUpdatingAmount] = useState(false);
   const { mutate } = useSWRConfig();
 
   const percentage = Math.min(
@@ -56,6 +61,37 @@ export function GoalCard({ goal, onUpdate }: GoalCardProps) {
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
+    }
+  };
+
+  const handleUpdateAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^0-9]/g, "");
+    setUpdateAmount(raw ? new Intl.NumberFormat("id-ID").format(parseInt(raw)) : "");
+  };
+
+  const handleQuickUpdate = async () => {
+    if (!updateAmount) return;
+    setIsUpdatingAmount(true);
+    try {
+      const rawAmount = parseInt(updateAmount.replace(/\./g, ""));
+      const res = await fetch(`/api/goals/${goal.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentAmount: rawAmount }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        toast.success("Jumlah berhasil diupdate");
+        mutate("/api/goals");
+        setUpdateAmount("");
+        onUpdate?.();
+      } else {
+        toast.error(result.error || "Gagal update jumlah");
+      }
+    } catch (_err) {
+      toast.error("Terjadi kesalahan");
+    } finally {
+      setIsUpdatingAmount(false);
     }
   };
 
@@ -125,12 +161,21 @@ export function GoalCard({ goal, onUpdate }: GoalCardProps) {
                 })}
               </p>
             </div>
-            <button
-              onClick={() => setShowDeleteDialog(true)}
-              className="p-1.5 text-zinc-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <GoalForm initialGoal={goal} onSuccess={() => { mutate("/api/goals"); onUpdate?.(); }}>
+                <button
+                  className="p-1.5 text-zinc-400 hover:text-indigo-500 transition-colors rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+              </GoalForm>
+              <button
+                onClick={() => setShowDeleteDialog(true)}
+                className="p-1.5 text-zinc-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Progress Bar */}
@@ -171,6 +216,24 @@ export function GoalCard({ goal, onUpdate }: GoalCardProps) {
               {new Intl.NumberFormat("id-ID").format(Math.round(monthlyNeeded))}
               /bulan
             </p>
+          )}
+
+          {/* Quick Update */}
+          {!goal.accountId && (
+            <div className="mt-3 flex items-center gap-2">
+              <Input
+                type="text"
+                inputMode="numeric"
+                placeholder="Update jumlah..."
+                value={updateAmount}
+                onChange={handleUpdateAmountChange}
+                disabled={isUpdatingAmount}
+                className="h-8 text-xs rounded-lg flex-1"
+              />
+              <Button size="sm" className="h-8 text-xs" onClick={handleQuickUpdate} disabled={isUpdatingAmount}>
+                {isUpdatingAmount ? "..." : "Update"}
+              </Button>
+            </div>
           )}
         </div>
       </div>

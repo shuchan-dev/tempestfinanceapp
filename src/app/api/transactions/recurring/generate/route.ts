@@ -73,21 +73,32 @@ export async function POST(
 
       // Create instance
       try {
-        await db.transaction.create({
-          data: {
-            userId: userId!,
-            amount: parentTx.amount,
-            type: parentTx.type,
-            description: parentTx.description,
-            date: nextDate,
-            accountId: parentTx.accountId,
-            categoryId: parentTx.categoryId,
-            toAccountId: parentTx.toAccountId,
-            adminFee: parentTx.adminFee,
-            isRecurringInstance: true,
-            recurrenceParentId: parentTx.id,
-            isSynced: false,
-          },
+        await db.$transaction(async (tx) => {
+          await tx.transaction.create({
+            data: {
+              userId: userId!,
+              amount: parentTx.amount,
+              type: parentTx.type,
+              description: parentTx.description,
+              date: nextDate,
+              accountId: parentTx.accountId,
+              categoryId: parentTx.categoryId,
+              toAccountId: parentTx.toAccountId,
+              adminFee: parentTx.adminFee,
+              isRecurringInstance: true,
+              recurrenceParentId: parentTx.id,
+              isSynced: false,
+            },
+          });
+
+          if (parentTx.type === "EXPENSE") {
+            await tx.account.update({ where: { id: parentTx.accountId }, data: { balance: { decrement: parentTx.amount } } });
+          } else if (parentTx.type === "INCOME") {
+            await tx.account.update({ where: { id: parentTx.accountId }, data: { balance: { increment: parentTx.amount } } });
+          } else if (parentTx.type === "TRANSFER" && parentTx.toAccountId) {
+            await tx.account.update({ where: { id: parentTx.accountId }, data: { balance: { decrement: parentTx.amount + (parentTx.adminFee || 0) } } });
+            await tx.account.update({ where: { id: parentTx.toAccountId }, data: { balance: { increment: parentTx.amount } } });
+          }
         });
 
         generatedCount++;

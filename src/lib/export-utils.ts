@@ -2,8 +2,8 @@
  * Transaction Export Utilities
  * Supports multiple formats: CSV, JSON, QIF, OFX
  */
-
 import type { TransactionData } from "@/types";
+import * as XLSX from "xlsx";
 
 export interface ExportOptions {
   format: "csv" | "json" | "qif" | "ofx";
@@ -85,8 +85,11 @@ export function exportToQIF(
 
   // Transaction data
   for (const tx of transactions) {
+    const date = new Date(tx.date);
+    const qifDate = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`; // M/D/YYYY
+    
     qif += "!Type:Bank\n";
-    qif += `^${tx.date.toString()}\n`; // Date
+    qif += `D${qifDate}\n`; // Date
     qif += `T${tx.type === "EXPENSE" ? "-" : ""}${tx.amount}\n`; // Amount (negative for expenses)
     qif += `P${tx.description || tx.category?.name || "Transaction"}\n`; // Description/Payee
     qif += `L${tx.category?.name || "Uncategorized"}\n`; // Category
@@ -163,64 +166,49 @@ ${txnList}
 }
 
 /**
- * Export transactions to Excel-compatible format
- * Creates an HTML table that Excel can open and format
+ * Export transactions to true Excel (.xlsx) format using xlsx library
  */
 export function exportToExcel(
   transactions: TransactionData[],
-  fileName: string = "transactions.xls",
+  fileName: string = "transactions.xlsx",
 ): void {
-  const tableRows = transactions
-    .map(
-      (tx) =>
-        `<tr>
-      <td>${new Date(tx.date).toLocaleDateString("id-ID")}</td>
-      <td>${tx.type}</td>
-      <td>${tx.category?.name || "-"}</td>
-      <td>${tx.account?.name || "-"}</td>
-      <td>${tx.description || "-"}</td>
-      <td style="text-align: right;">${tx.amount.toLocaleString("id-ID")}</td>
-      <td>${tx.isSynced ? "Synced" : "Pending"}</td>
-    </tr>`,
-    )
-    .join("\n");
+  const data = transactions.map((tx) => ({
+    Date: new Date(tx.date).toLocaleDateString("id-ID"),
+    Type: tx.type,
+    Category: tx.category?.name || "-",
+    Account: tx.account?.name || "-",
+    Description: tx.description || "-",
+    Amount: tx.amount,
+    Status: tx.isSynced ? "Synced" : "Pending",
+  }));
 
-  const html = `<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Tempest Finance - Transactions Export</title>
-    <style>
-      body { font-family: Arial, sans-serif; }
-      table { border-collapse: collapse; width: 100%; }
-      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-      th { background-color: #4CAF50; color: white; font-weight: bold; }
-      tr:nth-child(even) { background-color: #f2f2f2; }
-    </style>
-  </head>
-  <body>
-    <h2>Tempest Finance - Transaction Report</h2>
-    <p>Exported on: ${new Date().toLocaleString("id-ID")}</p>
-    <p>Total Transactions: ${transactions.length}</p>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Type</th>
-          <th>Category</th>
-          <th>Account</th>
-          <th>Description</th>
-          <th>Amount</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-${tableRows}
-      </tbody>
-    </table>
-  </body>
-</html>`;
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+  
+  // Custom column widths
+  const wscols = [
+    {wch: 12}, // Date
+    {wch: 10}, // Type
+    {wch: 15}, // Category
+    {wch: 15}, // Account
+    {wch: 30}, // Description
+    {wch: 15}, // Amount
+    {wch: 10}, // Status
+  ];
+  worksheet['!cols'] = wscols;
 
-  downloadFile(html, fileName, "application/vnd.ms-excel");
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  
+  const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 /**
@@ -255,7 +243,7 @@ export function getExportFileName(
       json: "json",
       qif: "qif",
       ofx: "ofx",
-      xlsx: "xls",
+      xlsx: "xlsx",
     }[format] || format;
   return `transactions_${date}.${ext}`;
 }

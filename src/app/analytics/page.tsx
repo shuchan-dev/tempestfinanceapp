@@ -345,7 +345,7 @@ export default function AnalyticsPage() {
               <Skeleton key={i} className="h-28 w-full rounded-2xl" />
             ))
           ) : (analytics?.budgetProgress.length ?? 0) === 0 ? (
-            <div className="text-center py-8 text-zinc-400 text-sm bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+            <div className="relative overflow-hidden rounded-2xl p-6 transition-all duration-300 bg-linear-to-br from-white to-zinc-50 dark:from-zinc-900 dark:to-zinc-900/50 border border-zinc-100 dark:border-zinc-800 shadow-sm text-center py-8 text-zinc-400 text-sm border-dashed">
               Belum ada budget yang disetel. Tap &ldquo;Set Budget&rdquo; untuk
               mulai.
             </div>

@@ -342,10 +342,17 @@ export default function HistoryPage() {
                     </div>
                   )}
                   <div className="flex flex-col">
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm leading-tight">
-                    {tx.type === "TRANSFER"
-                      ? "Transfer Saldo"
-                      : tx.category?.name || "Tanpa Kategori"}
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm leading-tight flex items-center gap-1.5">
+                    <span>
+                      {tx.type === "TRANSFER"
+                        ? "Transfer Saldo"
+                        : tx.category?.name || "Tanpa Kategori"}
+                    </span>
+                    {(tx.isRecurring || tx.isRecurringInstance) && (
+                      <span className="text-[10px] bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 px-1.5 rounded-sm" title="Recurring Transaction">
+                        🔄 
+                      </span>
+                    )}
                   </span>
                   <span className="text-xs font-medium text-zinc-500 leading-tight mt-0.5">
                     {tx.account?.name}

@@ -148,6 +148,54 @@ export async function POST(
   }
 }
 
+// ─── PATCH /api/categories ─────────────────────────────────────
+export async function PATCH(
+  req: NextRequest,
+): Promise<NextResponse<ApiResponse<CategoryData>>> {
+  try {
+    const { userId, error } = await resolveUserId();
+    if (error) return error;
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "ID Kategori wajib diisi" },
+        { status: 400 },
+      );
+    }
+
+    const body: { name?: string; icon?: string } = await req.json();
+
+    const category = await db.category.findFirst({
+      where: { id, userId: userId! },
+    });
+    if (!category) {
+      return NextResponse.json(
+        { success: false, error: "Kategori tidak ditemukan" },
+        { status: 404 },
+      );
+    }
+
+    const updated = await db.category.update({
+      where: { id },
+      data: {
+        ...(body.name !== undefined && { name: body.name.trim() }),
+        ...(body.icon !== undefined && { icon: body.icon }),
+      },
+    });
+
+    return NextResponse.json({ success: true, data: updated as unknown as CategoryData });
+  } catch (error) {
+    console.error("[PATCH /api/categories] Error:", error);
+    return NextResponse.json(
+      { success: false, error: "Gagal mengupdate kategori" },
+      { status: 500 },
+    );
+  }
+}
+
 // ─── DELETE /api/categories ───────────────────────────────────
 export async function DELETE(
   req: NextRequest,

@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 export interface FilterState {
   type?: "INCOME" | "EXPENSE" | "TRANSFER";
@@ -295,7 +295,7 @@ export function FilterButton({
           )}
           {(activeFilters.amountMin || activeFilters.amountMax) && (
             <FilterChip
-              label={`Nominal: ${activeFilters.amountMin || "0"} - ${activeFilters.amountMax || "∞"}`}
+              label={`Nominal: ${formatCurrency(activeFilters.amountMin || 0)} - ${activeFilters.amountMax ? formatCurrency(activeFilters.amountMax) : "∞"}`}
               onRemove={() => {
                 removeFilter("amountMin");
                 removeFilter("amountMax");

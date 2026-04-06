@@ -8,9 +8,11 @@ import {
   formatRelativeDate,
   getTransactionColor,
   getTransactionSign,
+  cn,
 } from "@/lib/utils";
 import { TransactionForm } from "@/components/transaction-form";
 import { BudgetAlertBanner } from "@/components/budget-alert-banner";
+import { DebtReminderBanner } from "@/components/debt-reminder-banner";
 import { GoalCard } from "@/components/goal-card";
 import { GoalForm } from "@/components/goal-form";
 import { QuickAddPanel } from "@/components/quick-add-panel";
@@ -21,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Receipt, AlertCircle, ArrowRightLeft } from "lucide-react";
 import Link from "next/link";
 import type { BudgetStatus } from "@/lib/budget-checker";
-import type { GoalData } from "@/types";
+import type { GoalData, AnalyticsData } from "@/types";
 
 export default function Dashboard() {
   const { accounts, transactions, totalBalance, accountsLoading, txLoading } =
@@ -44,6 +46,13 @@ export default function Dashboard() {
     data: GoalData[];
   }>("/api/goals");
   const goals = goalsRes?.data ?? [];
+
+  // Fetch analytics summary
+  const { data: analyticsRes } = useSWR<{
+    success: boolean;
+    data: AnalyticsData;
+  }>("/api/analytics");
+  const analytics = analyticsRes?.data;
 
   // Filter out dismissed alerts
   const visibleAlerts = useMemo(
@@ -75,6 +84,9 @@ export default function Dashboard() {
         </section>
       )}
 
+      {/* Debt Reminder Banner */}
+      <DebtReminderBanner />
+
       {/* Header section (Total Balance) */}
       <header className="flex justify-between items-start pt-2 pb-4">
         <div className="space-y-2">
@@ -91,6 +103,40 @@ export default function Dashboard() {
         </div>
         <NotificationBell />
       </header>
+
+      {/* Analytics Summary */}
+      <div className="grid grid-cols-3 gap-3 pb-4">
+        <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3">
+          <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase">
+            ↑ Masuk
+          </p>
+          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+            {formatCurrency(analytics?.totalIncomeThisMonth ?? 0)}
+          </p>
+        </div>
+        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3">
+          <p className="text-[10px] font-semibold text-red-500 uppercase">
+            ↓ Keluar
+          </p>
+          <p className="text-sm font-bold text-red-500 mt-1">
+            {formatCurrency(analytics?.totalExpenseThisMonth ?? 0)}
+          </p>
+        </div>
+        <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3">
+          <p className="text-[10px] font-semibold text-blue-500 uppercase">
+            Net
+          </p>
+          <p
+            className={cn(
+              "text-sm font-bold mt-1 truncate",
+              (analytics?.netFlowThisMonth ?? 0) >= 0 ? "text-emerald-500" : "text-red-500"
+            )}
+          >
+            {(analytics?.netFlowThisMonth ?? 0) >= 0 ? "+" : ""}
+            {formatCurrency(analytics?.netFlowThisMonth ?? 0)}
+          </p>
+        </div>
+      </div>
 
       {/* Accounts Horizontal Scroll */}
       <section className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
@@ -249,10 +295,15 @@ export default function Dashboard() {
                     )}
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
                       {tx.type === "TRANSFER"
                         ? "Transfer Saldo"
                         : tx.category?.name || "Tanpa Kategori"}
+                      {(tx.isRecurring || tx.isRecurringInstance) && (
+                        <span className="text-[10px] bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 px-1.5 rounded-sm" title="Recurring Transaction">
+                          🔄 
+                        </span>
+                      )}
                     </span>
                     <span className="text-xs font-medium text-zinc-500">
                       {tx.account?.name}{" "}

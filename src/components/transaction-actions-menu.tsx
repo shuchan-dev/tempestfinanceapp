@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MoreVertical, Edit2, Trash2 } from "lucide-react";
 import {
   AlertDialog,
@@ -32,6 +32,18 @@ export function TransactionActionsMenu({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { mutate } = useSWRConfig();
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -50,7 +62,7 @@ export function TransactionActionsMenu({
       setShowDeleteConfirm(false);
       setIsOpen(false);
 
-      // Revalidate transaction list
+      // Revalidate transaction list and accounts
       mutate(
         (key) => typeof key === "string" && key.includes("/api/transactions"),
         undefined,
@@ -58,6 +70,7 @@ export function TransactionActionsMenu({
           revalidate: true,
         },
       );
+      mutate("/api/accounts");
     } catch (err) {
       toast.error("Error menghapus transaksi");
       console.error(err);
@@ -68,7 +81,7 @@ export function TransactionActionsMenu({
 
   return (
     <>
-      <div className="relative">
+      <div className="relative" ref={menuRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"

@@ -27,12 +27,20 @@ export async function GET(
         deletedAt: null,
       },
       include: {
-        account: { select: { id: true, name: true } },
+        account: { select: { id: true, name: true, balance: true } },
       },
       orderBy: { targetDate: "asc" },
     });
 
-    return NextResponse.json({ success: true, data: goals as GoalData[] });
+    const goalsWithDynamicAmount = goals.map((g) => {
+      if (g.accountId && g.account) {
+        // Fallback to 0 if balance is magically undefined
+        return { ...g, currentAmount: typeof g.account.balance === 'number' ? g.account.balance : g.currentAmount };
+      }
+      return g;
+    });
+
+    return NextResponse.json({ success: true, data: goalsWithDynamicAmount as unknown as GoalData[] });
   } catch (error) {
     console.error("[GET /api/goals] Error:", error);
     return NextResponse.json(

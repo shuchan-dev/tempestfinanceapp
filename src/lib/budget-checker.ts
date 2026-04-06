@@ -15,36 +15,7 @@ export interface BudgetStatus {
   isExceeded: boolean; // >= 100%
 }
 
-/**
- * Get current month's spending for a category
- */
-export async function getCategorySpendingForMonth(
-  userId: string,
-  categoryId: string,
-  month: Date = new Date(),
-): Promise<number> {
-  const startOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
-  const endOfMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0);
-
-  const result = await db.transaction.aggregate({
-    where: {
-      userId,
-      categoryId,
-      type: "EXPENSE",
-      date: {
-        gte: startOfMonth,
-        lte: endOfMonth,
-      },
-      deletedAt: null,
-    },
-    _sum: {
-      amount: true,
-    },
-  });
-
-  return result._sum.amount || 0;
-}
-
+// getCategorySpendingForMonth has been removed to avoid N+1 queries being used elsewhere
 /**
  * Check if a category is over or near budget
  */
@@ -68,7 +39,24 @@ export async function checkBudgetStatus(
     return null;
   }
 
-  const spent = await getCategorySpendingForMonth(userId, categoryId);
+  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+
+  const result = await db.transaction.aggregate({
+    where: {
+      userId,
+      categoryId,
+      type: "EXPENSE",
+      date: {
+        gte: startOfMonth,
+        lte: endOfMonth,
+      },
+      deletedAt: null,
+    },
+    _sum: { amount: true },
+  });
+
+  const spent = result._sum.amount || 0;
   const percentage = (spent / budget.amount) * 100;
 
   return {
@@ -100,14 +88,43 @@ export async function checkUserBudgets(
     },
   });
 
+  if (budgets.length === 0) return [];
+
+  // Satu query untuk semua spending per kategori bulan ini
+  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+
+  const spendingByCategory = await db.transaction.groupBy({
+    by: ["categoryId"],
+    where: {
+      userId,
+      type: "EXPENSE",
+      deletedAt: null,
+      date: {
+        gte: startOfMonth,
+        lte: endOfMonth,
+      },
+      categoryId: {
+        in: budgets.map(b => b.categoryId),
+      },
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  // Map spending ke lookup
+  const spendingMap = new Map(
+    spendingByCategory.map(s => [s.categoryId, s._sum.amount || 0])
+  );
+
   const results: BudgetStatus[] = [];
 
   for (const budget of budgets) {
-    const spent = await getCategorySpendingForMonth(userId, budget.categoryId);
+    const spent = spendingMap.get(budget.categoryId) || 0;
     const percentage = (spent / budget.amount) * 100;
 
     if (percentage >= 75) {
-      // Only show if >= 75%
       results.push({
         categoryId: budget.category.id,
         categoryName: budget.category.name,

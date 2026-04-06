@@ -68,12 +68,17 @@ export async function GET(
             },
           }
         : {}),
+      ...(search
+        ? {
+            OR: [
+              { description: { contains: search } },
+              { category: { name: { contains: search } } },
+            ],
+          }
+        : {}),
     };
 
-    // For search, we need to handle OR conditions with description or category name
-    // Since Prisma OR with related fields is complex, fetch all and filter in JS
-    // BUT for better performance, filter by category name if search is provided
-    let transactions = await db.transaction.findMany({
+    const transactions = await db.transaction.findMany({
       where,
       include: {
         account: { select: { id: true, name: true, icon: true, color: true } },
@@ -83,31 +88,13 @@ export async function GET(
         },
       },
       orderBy: { date: "desc" },
-      take: limit * 3, // Fetch more to account for client-side filtering
+      take: limit,
+      skip: (page - 1) * limit,
     });
-
-    // Client-side search filtering (description + category name)
-    if (search) {
-      const searchLower = search.toLowerCase();
-      transactions = transactions.filter((tx) => {
-        const description = (tx.description || "").toLowerCase();
-        const categoryName = (tx.category?.name || "").toLowerCase();
-        return (
-          description.includes(searchLower) ||
-          categoryName.includes(searchLower)
-        );
-      });
-    }
-
-    // Apply pagination after filtering
-    const paginatedTransactions = transactions.slice(
-      (page - 1) * limit,
-      page * limit,
-    );
 
     return NextResponse.json({
       success: true,
-      data: paginatedTransactions as TransactionData[],
+      data: transactions as TransactionData[],
     });
   } catch (error) {
     console.error("[GET /api/transactions] Error:", error);

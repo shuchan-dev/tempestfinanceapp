@@ -47,14 +47,42 @@ export async function PATCH(
       );
     }
 
+    if (body.type && body.type !== existingTx.type) {
+      return NextResponse.json(
+        { success: false, error: "Perubahan tipe transaksi tidak didukung via Edit" },
+        { status: 400 },
+      );
+    }
+    if (body.accountId && body.accountId !== existingTx.accountId) {
+      return NextResponse.json(
+        { success: false, error: "Perubahan akun asal tidak didukung via Edit" },
+        { status: 400 },
+      );
+    }
+
     // Prepare update data
     const updateData: Record<string, unknown> = {};
+    const balanceUpdateQueries: any[] = [];
+
     if (body.amount !== undefined) {
       if (body.amount <= 0) {
         return NextResponse.json(
           { success: false, error: "Nominal harus lebih dari 0" },
           { status: 400 },
         );
+      }
+      
+      if (body.amount !== existingTx.amount) {
+        const diff = body.amount - existingTx.amount; // positive if increased
+        if (existingTx.type === "EXPENSE") {
+          balanceUpdateQueries.push(
+            db.account.update({ where: { id: existingTx.accountId }, data: { balance: { decrement: diff } } })
+          );
+        } else if (existingTx.type === "INCOME") {
+          balanceUpdateQueries.push(
+            db.account.update({ where: { id: existingTx.accountId }, data: { balance: { increment: diff } } })
+          );
+        }
       }
       updateData.amount = body.amount;
     }
@@ -65,7 +93,7 @@ export async function PATCH(
     if (body.tags !== undefined) updateData.tags = body.tags || null;
 
     // Update the transaction
-    const updated = await db.transaction.update({
+    const updateQuery = db.transaction.update({
       where: { id },
       data: updateData,
       include: {
@@ -76,6 +104,9 @@ export async function PATCH(
         },
       },
     });
+
+    const results = await db.$transaction([...balanceUpdateQueries, updateQuery]);
+    const updated = results[results.length - 1];
 
     return NextResponse.json({
       success: true,
@@ -123,11 +154,34 @@ export async function DELETE(
       );
     }
 
+    // Revert balances
+    const balanceUpdateQueries: any[] = [];
+    if (existingTx.type === "EXPENSE") {
+      balanceUpdateQueries.push(
+        db.account.update({ where: { id: existingTx.accountId }, data: { balance: { increment: existingTx.amount } } })
+      );
+    } else if (existingTx.type === "INCOME") {
+      balanceUpdateQueries.push(
+        db.account.update({ where: { id: existingTx.accountId }, data: { balance: { decrement: existingTx.amount } } })
+      );
+    } else if (existingTx.type === "TRANSFER") {
+      balanceUpdateQueries.push(
+        db.account.update({ where: { id: existingTx.accountId }, data: { balance: { increment: existingTx.amount + (existingTx.adminFee || 0) } } })
+      );
+      if (existingTx.toAccountId) {
+        balanceUpdateQueries.push(
+          db.account.update({ where: { id: existingTx.toAccountId }, data: { balance: { decrement: existingTx.amount } } })
+        );
+      }
+    }
+
     // Soft delete
-    await db.transaction.update({
+    const deleteQuery = db.transaction.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
+
+    await db.$transaction([...balanceUpdateQueries, deleteQuery]);
 
     return NextResponse.json({ success: true, data: true });
   } catch (error) {
