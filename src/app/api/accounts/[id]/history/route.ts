@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { eachDayOfInterval, format } from "date-fns";
 
 // GET /api/accounts/:id/history?days=30
 export async function GET(
@@ -81,12 +82,10 @@ export async function GET(
     // Bangun timeline dari startDate sampai hari ini
     const history: Array<{ date: string; balance: number }> = [];
 
-    // Hitung mundur: kurangi changes dari hari ini ke belakang
     const today = new Date();
-    const allDates: string[] = [];
-    for (let d = new Date(startDate); d <= today; d.setDate(d.getDate() + 1)) {
-      allDates.push(new Date(d).toISOString().split("T")[0]);
-    }
+    const allDates = eachDayOfInterval({ start: startDate, end: today }).map(
+      (d) => format(d, "yyyy-MM-dd")
+    );
 
     // Reverse calculation
     const totalChangesAfter: Record<string, number> = {};

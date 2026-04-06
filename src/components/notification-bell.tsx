@@ -12,6 +12,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
+interface NotificationData {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  isRead: boolean;
+  link: string | null;
+  createdAt: string;
+}
+
 export function NotificationBell() {
   const { data: res, mutate } = useSWR("/api/notifications");
   const [isOpen, setIsOpen] = useState(false);
@@ -82,7 +92,7 @@ export function NotificationBell() {
             </div>
           ) : (
             <div className="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800">
-              {notifications.map((notif: any) => (
+              {notifications.map((notif: NotificationData) => (
                 <div 
                   key={notif.id} 
                   className={`relative flex gap-3 px-4 py-3 group hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors ${!notif.isRead ? "bg-blue-50/30 dark:bg-blue-900/10" : ""}`}
@@ -101,7 +111,7 @@ export function NotificationBell() {
                       {formatRelativeDate(notif.createdAt)}
                     </p>
                   </div>
-                  <div className="flex-col items-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 top-3 hidden md:flex">
+                  <div className="flex flex-col items-end gap-1 absolute right-4 top-3 md:opacity-0 md:group-hover:opacity-100 md:transition-opacity">
                     {!notif.isRead && (
                       <button onClick={(e) => { e.stopPropagation(); markAsRead(notif.id); }} className="p-1 text-zinc-400 hover:text-emerald-500 rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
                         <Check className="h-3.5 w-3.5" />

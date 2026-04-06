@@ -4,9 +4,32 @@ import useSWR from "swr";
 import { formatCurrency } from "@/lib/utils";
 import { ArrowUp, ArrowDown, Minus, TrendingDown, TrendingUp } from "lucide-react";
 
+interface ComparisonItem {
+  categoryId: string;
+  categoryName: string;
+  icon: string;
+  currentMonth: number;
+  previousMonth: number;
+  changePercent: number;
+  changeDirection: "UP" | "DOWN" | "SAME";
+}
+
 export function SpendingComparison() {
-  const { data: res } = useSWR("/api/analytics/comparison");
+  const { data: res, isLoading } = useSWR("/api/analytics/comparison");
   const comparison = res?.data;
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 mt-6 animate-pulse">
+        <div className="h-5 w-48 bg-zinc-200 dark:bg-zinc-700 rounded mb-4" />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-12 bg-zinc-100 dark:bg-zinc-800 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!comparison) return null;
 
@@ -27,7 +50,7 @@ export function SpendingComparison() {
       </h3>
 
       <div className="space-y-3">
-        {comparison.categories.map((item: any) => {
+        {comparison.categories.map((item: ComparisonItem) => {
           const isGood = item.changeDirection === "DOWN";
           const isBad = item.changeDirection === "UP";
 

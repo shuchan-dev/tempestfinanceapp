@@ -44,7 +44,7 @@ export function BalanceHistoryChart({ accountId, days = 30 }: BalanceHistoryChar
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={history} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
           <defs>
-            <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id={`colorBalance-${accountId}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
               <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
             </linearGradient>
@@ -88,7 +88,7 @@ export function BalanceHistoryChart({ accountId, days = 30 }: BalanceHistoryChar
             stroke="#10b981" 
             strokeWidth={2}
             fillOpacity={1} 
-            fill="url(#colorBalance)" 
+            fill={`url(#colorBalance-${accountId})`} 
             animationDuration={800}
           />
         </AreaChart>

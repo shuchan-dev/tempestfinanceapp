@@ -15,6 +15,29 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+interface QuickAddPreset {
+  id: string;
+  name: string;
+  amount: number;
+  icon: string;
+  categoryId: string;
+  accountId: string;
+  category: { id: string; name: string; icon: string | null; type: string };
+  account: { id: string; name: string; icon: string | null };
+}
+
+interface AccountOption {
+  id: string;
+  name: string;
+  icon: string | null;
+}
+
+interface CategoryOption {
+  id: string;
+  name: string;
+  icon: string | null;
+}
+
 export function QuickAddPanel() {
   const { data: qRes, mutate: mutateQuickAdds } = useSWR("/api/quick-adds");
   const quickAdds = qRes?.data || [];
@@ -66,14 +89,15 @@ export function QuickAddPanel() {
       setIcon("☕");
       setCategoryId("");
       setAccountId("");
-    } catch (err: any) {
-      toast.error(err.message || "Gagal membuat preset");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal membuat preset";
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleApply = async (preset: any) => {
+  const handleApply = async (preset: QuickAddPreset) => {
     try {
       const res = await fetch("/api/transactions", {
         method: "POST",
@@ -94,25 +118,53 @@ export function QuickAddPanel() {
       
       mutate("/api/transactions?limit=10");
       mutate("/api/accounts");
-    } catch (err: any) {
-      toast.error(err.message || "Gagal membuat transaksi");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal membuat transaksi";
+      toast.error(message);
+    }
+  };
+
+  const handleDeletePreset = async (presetId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Mencegah trigger handleApply
+    if (!confirm("Hapus preset ini?")) return;
+
+    try {
+      const res = await fetch(`/api/quick-adds?id=${presetId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      toast.success("Preset dihapus");
+      mutateQuickAdds();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal menghapus preset";
+      toast.error(message);
     }
   };
 
   return (
     <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
-      {quickAdds.map((preset: any) => (
-        <button
-          key={preset.id}
-          onClick={() => handleApply(preset)}
-          className="flex min-w-[120px] flex-col items-center justify-center gap-2 rounded-2xl bg-white p-4 shadow-sm snap-center border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors"
-        >
-          <span className="text-3xl">{preset.icon}</span>
-          <div className="text-center">
-            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate w-[100px]">{preset.name}</p>
-            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-500">{formatCurrency(preset.amount)}</p>
-          </div>
-        </button>
+      {quickAdds.map((preset: QuickAddPreset) => (
+        <div key={preset.id} className="relative group snap-center">
+          <button
+            onClick={() => handleApply(preset)}
+            className="flex min-w-[120px] flex-col items-center justify-center gap-2 rounded-2xl bg-white p-4 shadow-sm border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors"
+          >
+            <span className="text-3xl">{preset.icon}</span>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate w-[100px]">{preset.name}</p>
+              <p className="text-xs font-bold text-emerald-600 dark:text-emerald-500">{formatCurrency(preset.amount)}</p>
+            </div>
+          </button>
+          <button
+            onClick={(e) => handleDeletePreset(preset.id, e)}
+            className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600"
+            title="Hapus preset"
+          >
+            ✕
+          </button>
+        </div>
       ))}
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -163,7 +215,7 @@ export function QuickAddPanel() {
                 onChange={(e) => setAccountId(e.target.value)}
               >
                 <option value="" disabled>Pilih Akun</option>
-                {accounts.map((acc: any) => (
+                {accounts.map((acc: AccountOption) => (
                   <option key={acc.id} value={acc.id}>{acc.icon} {acc.name}</option>
                 ))}
               </select>
@@ -176,7 +228,7 @@ export function QuickAddPanel() {
                 onChange={(e) => setCategoryId(e.target.value)}
               >
                 <option value="" disabled>Pilih Kategori</option>
-                {categories.map((cat: any) => (
+                {categories.map((cat: CategoryOption) => (
                   <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
                 ))}
               </select>

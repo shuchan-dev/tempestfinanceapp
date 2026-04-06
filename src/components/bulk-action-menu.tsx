@@ -10,9 +10,16 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 
+interface CategoryItem {
+  id: string;
+  name: string;
+  icon?: string;
+  children?: CategoryItem[];
+}
+
 interface BulkActionMenuProps {
   selectedIds: string[];
-  categories: any[];
+  categories: CategoryItem[];
   onClearSelection: () => void;
   onSuccess: () => void;
 }
@@ -102,7 +109,7 @@ export function BulkActionMenu({
                   <div className="px-2 py-1 text-[10px] font-bold text-zinc-500 bg-zinc-800/50 rounded-md">
                     {c.icon} {c.name}
                   </div>
-                  {c.children.map((child: any) => (
+                  {c.children.map((child: CategoryItem) => (
                     <button
                       key={child.id}
                       onClick={() => handleRecategorize(child.id)}
