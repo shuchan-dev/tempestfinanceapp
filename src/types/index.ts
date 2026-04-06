@@ -58,6 +58,7 @@ export interface TransactionData {
   recurrenceEndDate?: Date | null;
   recurrenceParentId?: string | null;
   isRecurringInstance?: boolean;
+  tags?: string | null;
 }
 
 /** Data budget threshold per kategori */
@@ -163,6 +164,7 @@ export interface CreateTransactionPayload {
   isRecurring?: boolean;
   recurrenceRule?: string;
   recurrenceEndDate?: string;
+  tags?: string;
 }
 
 export interface CreateAccountPayload {

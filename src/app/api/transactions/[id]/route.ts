@@ -62,6 +62,7 @@ export async function PATCH(
       updateData.description = body.description;
     if (body.categoryId !== undefined) updateData.categoryId = body.categoryId;
     if (body.date !== undefined) updateData.date = new Date(body.date);
+    if (body.tags !== undefined) updateData.tags = body.tags || null;
 
     // Update the transaction
     const updated = await db.transaction.update({

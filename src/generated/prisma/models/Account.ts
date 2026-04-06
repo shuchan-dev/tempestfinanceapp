@@ -274,6 +274,7 @@ export type AccountWhereInput = {
   transactions?: Prisma.TransactionListRelationFilter
   transfersIn?: Prisma.TransactionListRelationFilter
   goals?: Prisma.GoalListRelationFilter
+  quickAdds?: Prisma.QuickAddListRelationFilter
 }
 
 export type AccountOrderByWithRelationInput = {
@@ -294,6 +295,7 @@ export type AccountOrderByWithRelationInput = {
   transactions?: Prisma.TransactionOrderByRelationAggregateInput
   transfersIn?: Prisma.TransactionOrderByRelationAggregateInput
   goals?: Prisma.GoalOrderByRelationAggregateInput
+  quickAdds?: Prisma.QuickAddOrderByRelationAggregateInput
 }
 
 export type AccountWhereUniqueInput = Prisma.AtLeast<{
@@ -317,6 +319,7 @@ export type AccountWhereUniqueInput = Prisma.AtLeast<{
   transactions?: Prisma.TransactionListRelationFilter
   transfersIn?: Prisma.TransactionListRelationFilter
   goals?: Prisma.GoalListRelationFilter
+  quickAdds?: Prisma.QuickAddListRelationFilter
 }, "id">
 
 export type AccountOrderByWithAggregationInput = {
@@ -371,6 +374,7 @@ export type AccountCreateInput = {
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionCreateNestedManyWithoutToAccountInput
   goals?: Prisma.GoalCreateNestedManyWithoutAccountInput
+  quickAdds?: Prisma.QuickAddCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUncheckedCreateInput = {
@@ -389,6 +393,7 @@ export type AccountUncheckedCreateInput = {
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionUncheckedCreateNestedManyWithoutToAccountInput
   goals?: Prisma.GoalUncheckedCreateNestedManyWithoutAccountInput
+  quickAdds?: Prisma.QuickAddUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUpdateInput = {
@@ -407,6 +412,7 @@ export type AccountUpdateInput = {
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUpdateManyWithoutToAccountNestedInput
   goals?: Prisma.GoalUpdateManyWithoutAccountNestedInput
+  quickAdds?: Prisma.QuickAddUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateInput = {
@@ -425,6 +431,7 @@ export type AccountUncheckedUpdateInput = {
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUncheckedUpdateManyWithoutToAccountNestedInput
   goals?: Prisma.GoalUncheckedUpdateManyWithoutAccountNestedInput
+  quickAdds?: Prisma.QuickAddUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountCreateManyInput = {
@@ -697,6 +704,20 @@ export type AccountUpdateOneWithoutGoalsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.AccountUpdateToOneWithWhereWithoutGoalsInput, Prisma.AccountUpdateWithoutGoalsInput>, Prisma.AccountUncheckedUpdateWithoutGoalsInput>
 }
 
+export type AccountCreateNestedOneWithoutQuickAddsInput = {
+  create?: Prisma.XOR<Prisma.AccountCreateWithoutQuickAddsInput, Prisma.AccountUncheckedCreateWithoutQuickAddsInput>
+  connectOrCreate?: Prisma.AccountCreateOrConnectWithoutQuickAddsInput
+  connect?: Prisma.AccountWhereUniqueInput
+}
+
+export type AccountUpdateOneRequiredWithoutQuickAddsNestedInput = {
+  create?: Prisma.XOR<Prisma.AccountCreateWithoutQuickAddsInput, Prisma.AccountUncheckedCreateWithoutQuickAddsInput>
+  connectOrCreate?: Prisma.AccountCreateOrConnectWithoutQuickAddsInput
+  upsert?: Prisma.AccountUpsertWithoutQuickAddsInput
+  connect?: Prisma.AccountWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AccountUpdateToOneWithWhereWithoutQuickAddsInput, Prisma.AccountUpdateWithoutQuickAddsInput>, Prisma.AccountUncheckedUpdateWithoutQuickAddsInput>
+}
+
 export type AccountCreateWithoutUserInput = {
   id?: string
   name: string
@@ -712,6 +733,7 @@ export type AccountCreateWithoutUserInput = {
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionCreateNestedManyWithoutToAccountInput
   goals?: Prisma.GoalCreateNestedManyWithoutAccountInput
+  quickAdds?: Prisma.QuickAddCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUncheckedCreateWithoutUserInput = {
@@ -729,6 +751,7 @@ export type AccountUncheckedCreateWithoutUserInput = {
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionUncheckedCreateNestedManyWithoutToAccountInput
   goals?: Prisma.GoalUncheckedCreateNestedManyWithoutAccountInput
+  quickAdds?: Prisma.QuickAddUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type AccountCreateOrConnectWithoutUserInput = {
@@ -788,6 +811,7 @@ export type AccountCreateWithoutChildrenInput = {
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionCreateNestedManyWithoutToAccountInput
   goals?: Prisma.GoalCreateNestedManyWithoutAccountInput
+  quickAdds?: Prisma.QuickAddCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUncheckedCreateWithoutChildrenInput = {
@@ -805,6 +829,7 @@ export type AccountUncheckedCreateWithoutChildrenInput = {
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionUncheckedCreateNestedManyWithoutToAccountInput
   goals?: Prisma.GoalUncheckedCreateNestedManyWithoutAccountInput
+  quickAdds?: Prisma.QuickAddUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type AccountCreateOrConnectWithoutChildrenInput = {
@@ -827,6 +852,7 @@ export type AccountCreateWithoutParentInput = {
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionCreateNestedManyWithoutToAccountInput
   goals?: Prisma.GoalCreateNestedManyWithoutAccountInput
+  quickAdds?: Prisma.QuickAddCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUncheckedCreateWithoutParentInput = {
@@ -844,6 +870,7 @@ export type AccountUncheckedCreateWithoutParentInput = {
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionUncheckedCreateNestedManyWithoutToAccountInput
   goals?: Prisma.GoalUncheckedCreateNestedManyWithoutAccountInput
+  quickAdds?: Prisma.QuickAddUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type AccountCreateOrConnectWithoutParentInput = {
@@ -881,6 +908,7 @@ export type AccountUpdateWithoutChildrenInput = {
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUpdateManyWithoutToAccountNestedInput
   goals?: Prisma.GoalUpdateManyWithoutAccountNestedInput
+  quickAdds?: Prisma.QuickAddUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateWithoutChildrenInput = {
@@ -898,6 +926,7 @@ export type AccountUncheckedUpdateWithoutChildrenInput = {
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUncheckedUpdateManyWithoutToAccountNestedInput
   goals?: Prisma.GoalUncheckedUpdateManyWithoutAccountNestedInput
+  quickAdds?: Prisma.QuickAddUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUpsertWithWhereUniqueWithoutParentInput = {
@@ -931,6 +960,7 @@ export type AccountCreateWithoutTransactionsInput = {
   user: Prisma.UserCreateNestedOneWithoutAccountsInput
   transfersIn?: Prisma.TransactionCreateNestedManyWithoutToAccountInput
   goals?: Prisma.GoalCreateNestedManyWithoutAccountInput
+  quickAdds?: Prisma.QuickAddCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUncheckedCreateWithoutTransactionsInput = {
@@ -948,6 +978,7 @@ export type AccountUncheckedCreateWithoutTransactionsInput = {
   children?: Prisma.AccountUncheckedCreateNestedManyWithoutParentInput
   transfersIn?: Prisma.TransactionUncheckedCreateNestedManyWithoutToAccountInput
   goals?: Prisma.GoalUncheckedCreateNestedManyWithoutAccountInput
+  quickAdds?: Prisma.QuickAddUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type AccountCreateOrConnectWithoutTransactionsInput = {
@@ -970,6 +1001,7 @@ export type AccountCreateWithoutTransfersInInput = {
   user: Prisma.UserCreateNestedOneWithoutAccountsInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
   goals?: Prisma.GoalCreateNestedManyWithoutAccountInput
+  quickAdds?: Prisma.QuickAddCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUncheckedCreateWithoutTransfersInInput = {
@@ -987,6 +1019,7 @@ export type AccountUncheckedCreateWithoutTransfersInInput = {
   children?: Prisma.AccountUncheckedCreateNestedManyWithoutParentInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
   goals?: Prisma.GoalUncheckedCreateNestedManyWithoutAccountInput
+  quickAdds?: Prisma.QuickAddUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type AccountCreateOrConnectWithoutTransfersInInput = {
@@ -1020,6 +1053,7 @@ export type AccountUpdateWithoutTransactionsInput = {
   user?: Prisma.UserUpdateOneRequiredWithoutAccountsNestedInput
   transfersIn?: Prisma.TransactionUpdateManyWithoutToAccountNestedInput
   goals?: Prisma.GoalUpdateManyWithoutAccountNestedInput
+  quickAdds?: Prisma.QuickAddUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateWithoutTransactionsInput = {
@@ -1037,6 +1071,7 @@ export type AccountUncheckedUpdateWithoutTransactionsInput = {
   children?: Prisma.AccountUncheckedUpdateManyWithoutParentNestedInput
   transfersIn?: Prisma.TransactionUncheckedUpdateManyWithoutToAccountNestedInput
   goals?: Prisma.GoalUncheckedUpdateManyWithoutAccountNestedInput
+  quickAdds?: Prisma.QuickAddUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUpsertWithoutTransfersInInput = {
@@ -1065,6 +1100,7 @@ export type AccountUpdateWithoutTransfersInInput = {
   user?: Prisma.UserUpdateOneRequiredWithoutAccountsNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
   goals?: Prisma.GoalUpdateManyWithoutAccountNestedInput
+  quickAdds?: Prisma.QuickAddUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateWithoutTransfersInInput = {
@@ -1082,6 +1118,7 @@ export type AccountUncheckedUpdateWithoutTransfersInInput = {
   children?: Prisma.AccountUncheckedUpdateManyWithoutParentNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
   goals?: Prisma.GoalUncheckedUpdateManyWithoutAccountNestedInput
+  quickAdds?: Prisma.QuickAddUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountCreateWithoutGoalsInput = {
@@ -1099,6 +1136,7 @@ export type AccountCreateWithoutGoalsInput = {
   user: Prisma.UserCreateNestedOneWithoutAccountsInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionCreateNestedManyWithoutToAccountInput
+  quickAdds?: Prisma.QuickAddCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUncheckedCreateWithoutGoalsInput = {
@@ -1116,6 +1154,7 @@ export type AccountUncheckedCreateWithoutGoalsInput = {
   children?: Prisma.AccountUncheckedCreateNestedManyWithoutParentInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
   transfersIn?: Prisma.TransactionUncheckedCreateNestedManyWithoutToAccountInput
+  quickAdds?: Prisma.QuickAddUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type AccountCreateOrConnectWithoutGoalsInput = {
@@ -1149,6 +1188,7 @@ export type AccountUpdateWithoutGoalsInput = {
   user?: Prisma.UserUpdateOneRequiredWithoutAccountsNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUpdateManyWithoutToAccountNestedInput
+  quickAdds?: Prisma.QuickAddUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateWithoutGoalsInput = {
@@ -1166,6 +1206,95 @@ export type AccountUncheckedUpdateWithoutGoalsInput = {
   children?: Prisma.AccountUncheckedUpdateManyWithoutParentNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUncheckedUpdateManyWithoutToAccountNestedInput
+  quickAdds?: Prisma.QuickAddUncheckedUpdateManyWithoutAccountNestedInput
+}
+
+export type AccountCreateWithoutQuickAddsInput = {
+  id?: string
+  name: string
+  balance?: number
+  uangGoib?: number
+  icon?: string | null
+  color?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deletedAt?: Date | string | null
+  parent?: Prisma.AccountCreateNestedOneWithoutChildrenInput
+  children?: Prisma.AccountCreateNestedManyWithoutParentInput
+  user: Prisma.UserCreateNestedOneWithoutAccountsInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
+  transfersIn?: Prisma.TransactionCreateNestedManyWithoutToAccountInput
+  goals?: Prisma.GoalCreateNestedManyWithoutAccountInput
+}
+
+export type AccountUncheckedCreateWithoutQuickAddsInput = {
+  id?: string
+  name: string
+  balance?: number
+  uangGoib?: number
+  icon?: string | null
+  color?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deletedAt?: Date | string | null
+  parentId?: string | null
+  userId: string
+  children?: Prisma.AccountUncheckedCreateNestedManyWithoutParentInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
+  transfersIn?: Prisma.TransactionUncheckedCreateNestedManyWithoutToAccountInput
+  goals?: Prisma.GoalUncheckedCreateNestedManyWithoutAccountInput
+}
+
+export type AccountCreateOrConnectWithoutQuickAddsInput = {
+  where: Prisma.AccountWhereUniqueInput
+  create: Prisma.XOR<Prisma.AccountCreateWithoutQuickAddsInput, Prisma.AccountUncheckedCreateWithoutQuickAddsInput>
+}
+
+export type AccountUpsertWithoutQuickAddsInput = {
+  update: Prisma.XOR<Prisma.AccountUpdateWithoutQuickAddsInput, Prisma.AccountUncheckedUpdateWithoutQuickAddsInput>
+  create: Prisma.XOR<Prisma.AccountCreateWithoutQuickAddsInput, Prisma.AccountUncheckedCreateWithoutQuickAddsInput>
+  where?: Prisma.AccountWhereInput
+}
+
+export type AccountUpdateToOneWithWhereWithoutQuickAddsInput = {
+  where?: Prisma.AccountWhereInput
+  data: Prisma.XOR<Prisma.AccountUpdateWithoutQuickAddsInput, Prisma.AccountUncheckedUpdateWithoutQuickAddsInput>
+}
+
+export type AccountUpdateWithoutQuickAddsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  balance?: Prisma.FloatFieldUpdateOperationsInput | number
+  uangGoib?: Prisma.FloatFieldUpdateOperationsInput | number
+  icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  parent?: Prisma.AccountUpdateOneWithoutChildrenNestedInput
+  children?: Prisma.AccountUpdateManyWithoutParentNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutAccountsNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
+  transfersIn?: Prisma.TransactionUpdateManyWithoutToAccountNestedInput
+  goals?: Prisma.GoalUpdateManyWithoutAccountNestedInput
+}
+
+export type AccountUncheckedUpdateWithoutQuickAddsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  balance?: Prisma.FloatFieldUpdateOperationsInput | number
+  uangGoib?: Prisma.FloatFieldUpdateOperationsInput | number
+  icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  children?: Prisma.AccountUncheckedUpdateManyWithoutParentNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
+  transfersIn?: Prisma.TransactionUncheckedUpdateManyWithoutToAccountNestedInput
+  goals?: Prisma.GoalUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountCreateManyUserInput = {
@@ -1196,6 +1325,7 @@ export type AccountUpdateWithoutUserInput = {
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUpdateManyWithoutToAccountNestedInput
   goals?: Prisma.GoalUpdateManyWithoutAccountNestedInput
+  quickAdds?: Prisma.QuickAddUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateWithoutUserInput = {
@@ -1213,6 +1343,7 @@ export type AccountUncheckedUpdateWithoutUserInput = {
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUncheckedUpdateManyWithoutToAccountNestedInput
   goals?: Prisma.GoalUncheckedUpdateManyWithoutAccountNestedInput
+  quickAdds?: Prisma.QuickAddUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateManyWithoutUserInput = {
@@ -1256,6 +1387,7 @@ export type AccountUpdateWithoutParentInput = {
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUpdateManyWithoutToAccountNestedInput
   goals?: Prisma.GoalUpdateManyWithoutAccountNestedInput
+  quickAdds?: Prisma.QuickAddUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateWithoutParentInput = {
@@ -1273,6 +1405,7 @@ export type AccountUncheckedUpdateWithoutParentInput = {
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
   transfersIn?: Prisma.TransactionUncheckedUpdateManyWithoutToAccountNestedInput
   goals?: Prisma.GoalUncheckedUpdateManyWithoutAccountNestedInput
+  quickAdds?: Prisma.QuickAddUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateManyWithoutParentInput = {
@@ -1298,6 +1431,7 @@ export type AccountCountOutputType = {
   transactions: number
   transfersIn: number
   goals: number
+  quickAdds: number
 }
 
 export type AccountCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1305,6 +1439,7 @@ export type AccountCountOutputTypeSelect<ExtArgs extends runtime.Types.Extension
   transactions?: boolean | AccountCountOutputTypeCountTransactionsArgs
   transfersIn?: boolean | AccountCountOutputTypeCountTransfersInArgs
   goals?: boolean | AccountCountOutputTypeCountGoalsArgs
+  quickAdds?: boolean | AccountCountOutputTypeCountQuickAddsArgs
 }
 
 /**
@@ -1345,6 +1480,13 @@ export type AccountCountOutputTypeCountGoalsArgs<ExtArgs extends runtime.Types.E
   where?: Prisma.GoalWhereInput
 }
 
+/**
+ * AccountCountOutputType without action
+ */
+export type AccountCountOutputTypeCountQuickAddsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.QuickAddWhereInput
+}
+
 
 export type AccountSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1364,6 +1506,7 @@ export type AccountSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   transactions?: boolean | Prisma.Account$transactionsArgs<ExtArgs>
   transfersIn?: boolean | Prisma.Account$transfersInArgs<ExtArgs>
   goals?: boolean | Prisma.Account$goalsArgs<ExtArgs>
+  quickAdds?: boolean | Prisma.Account$quickAddsArgs<ExtArgs>
   _count?: boolean | Prisma.AccountCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["account"]>
 
@@ -1421,6 +1564,7 @@ export type AccountInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   transactions?: boolean | Prisma.Account$transactionsArgs<ExtArgs>
   transfersIn?: boolean | Prisma.Account$transfersInArgs<ExtArgs>
   goals?: boolean | Prisma.Account$goalsArgs<ExtArgs>
+  quickAdds?: boolean | Prisma.Account$quickAddsArgs<ExtArgs>
   _count?: boolean | Prisma.AccountCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type AccountIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1441,6 +1585,7 @@ export type $AccountPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     transactions: Prisma.$TransactionPayload<ExtArgs>[]
     transfersIn: Prisma.$TransactionPayload<ExtArgs>[]
     goals: Prisma.$GoalPayload<ExtArgs>[]
+    quickAdds: Prisma.$QuickAddPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1854,6 +1999,7 @@ export interface Prisma__AccountClient<T, Null = never, ExtArgs extends runtime.
   transactions<T extends Prisma.Account$transactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Account$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   transfersIn<T extends Prisma.Account$transfersInArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Account$transfersInArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   goals<T extends Prisma.Account$goalsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Account$goalsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GoalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  quickAdds<T extends Prisma.Account$quickAddsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Account$quickAddsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$QuickAddPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2405,6 +2551,30 @@ export type Account$goalsArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.GoalScalarFieldEnum | Prisma.GoalScalarFieldEnum[]
+}
+
+/**
+ * Account.quickAdds
+ */
+export type Account$quickAddsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the QuickAdd
+   */
+  select?: Prisma.QuickAddSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the QuickAdd
+   */
+  omit?: Prisma.QuickAddOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.QuickAddInclude<ExtArgs> | null
+  where?: Prisma.QuickAddWhereInput
+  orderBy?: Prisma.QuickAddOrderByWithRelationInput | Prisma.QuickAddOrderByWithRelationInput[]
+  cursor?: Prisma.QuickAddWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.QuickAddScalarFieldEnum | Prisma.QuickAddScalarFieldEnum[]
 }
 
 /**

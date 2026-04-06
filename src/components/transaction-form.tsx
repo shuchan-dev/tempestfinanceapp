@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { RecurrenceSelect } from "@/components/recurrence-select";
+import { TagInput } from "@/components/tag-input";
 import {
   Popover,
   PopoverContent,
@@ -53,6 +54,7 @@ export function TransactionForm({ children, onSuccess, editTransaction }: Transa
   const [description, setDescription] = useState<string>("");
   const [date, setDate] = useState<Date>(new Date());
   const [adminFee, setAdminFee] = useState<string>("");
+  const [tags, setTags] = useState<string>("");
   const [recurrence, setRecurrence] = useState<RecurrenceConfig | null>(null);
 
   const [isShaking, setIsShaking] = useState(false);
@@ -120,6 +122,7 @@ export function TransactionForm({ children, onSuccess, editTransaction }: Transa
       setDescription(editTransaction.description || "");
       setDate(new Date(editTransaction.date));
       setAdminFee(editTransaction.adminFee?.toString() || "");
+      setTags(editTransaction.tags || "");
     }
   }, [editTransaction]);
 
@@ -201,6 +204,7 @@ export function TransactionForm({ children, onSuccess, editTransaction }: Transa
       categoryId: type !== "TRANSFER" ? categoryId : undefined,
       toAccountId: type === "TRANSFER" ? toAccountId : undefined,
       description,
+      tags: tags || undefined,
       adminFee:
         type === "TRANSFER" && adminFee
           ? Number(adminFee.replace(/[^0-9]/g, ""))
@@ -246,6 +250,7 @@ export function TransactionForm({ children, onSuccess, editTransaction }: Transa
         setAmount("");
         setDescription("");
         setAdminFee("");
+        setTags("");
         setDate(new Date());
 
         // ─── Strategi 3: Optimistic/Smart Cache Update ─────────
@@ -325,6 +330,7 @@ export function TransactionForm({ children, onSuccess, editTransaction }: Transa
     setDescription("");
     setDate(new Date());
     setAdminFee("");
+    setTags("");
     setRecurrence(null);
   };
 
@@ -601,6 +607,14 @@ export function TransactionForm({ children, onSuccess, editTransaction }: Transa
                 onChange={(e) => setDescription(e.target.value)}
                 className="rounded-xl border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
               />
+            </div>
+
+            {/* NEW: Tags */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-zinc-500 uppercase">
+                Tags (Opsional)
+              </label>
+              <TagInput value={tags} onChange={setTags} placeholder="Ketik tag lalu Enter..." />
             </div>
 
             {/* Smart Suggestions & Duplicate Detection */}

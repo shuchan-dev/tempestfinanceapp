@@ -42,6 +42,7 @@ export async function GET(
     const amountMax = searchParams.get("amountMax");
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
+    const tag = searchParams.get("tag");
 
     // Build complex where clause for search
     const where: any = {
@@ -50,6 +51,7 @@ export async function GET(
       ...(type && { type }),
       ...(accountId && { accountId }),
       ...(categoryId && { categoryId }),
+      ...(tag ? { tags: { contains: tag } } : {}),
       ...(dateFrom || dateTo
         ? {
             date: {

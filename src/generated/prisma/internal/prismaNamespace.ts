@@ -391,7 +391,9 @@ export const ModelName = {
   Budget: 'Budget',
   Debt: 'Debt',
   DebtPayment: 'DebtPayment',
-  Goal: 'Goal'
+  Goal: 'Goal',
+  QuickAdd: 'QuickAdd',
+  Notification: 'Notification'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -407,7 +409,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "category" | "transaction" | "budget" | "debt" | "debtPayment" | "goal"
+    modelProps: "user" | "account" | "category" | "transaction" | "budget" | "debt" | "debtPayment" | "goal" | "quickAdd" | "notification"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1003,6 +1005,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    QuickAdd: {
+      payload: Prisma.$QuickAddPayload<ExtArgs>
+      fields: Prisma.QuickAddFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.QuickAddFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuickAddPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.QuickAddFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuickAddPayload>
+        }
+        findFirst: {
+          args: Prisma.QuickAddFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuickAddPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.QuickAddFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuickAddPayload>
+        }
+        findMany: {
+          args: Prisma.QuickAddFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuickAddPayload>[]
+        }
+        create: {
+          args: Prisma.QuickAddCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuickAddPayload>
+        }
+        createMany: {
+          args: Prisma.QuickAddCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.QuickAddCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuickAddPayload>[]
+        }
+        delete: {
+          args: Prisma.QuickAddDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuickAddPayload>
+        }
+        update: {
+          args: Prisma.QuickAddUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuickAddPayload>
+        }
+        deleteMany: {
+          args: Prisma.QuickAddDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.QuickAddUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.QuickAddUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuickAddPayload>[]
+        }
+        upsert: {
+          args: Prisma.QuickAddUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuickAddPayload>
+        }
+        aggregate: {
+          args: Prisma.QuickAddAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateQuickAdd>
+        }
+        groupBy: {
+          args: Prisma.QuickAddGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.QuickAddGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.QuickAddCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.QuickAddCountAggregateOutputType> | number
+        }
+      }
+    }
+    Notification: {
+      payload: Prisma.$NotificationPayload<ExtArgs>
+      fields: Prisma.NotificationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NotificationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NotificationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>
+        }
+        findFirst: {
+          args: Prisma.NotificationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NotificationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>
+        }
+        findMany: {
+          args: Prisma.NotificationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>[]
+        }
+        create: {
+          args: Prisma.NotificationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>
+        }
+        createMany: {
+          args: Prisma.NotificationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NotificationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>[]
+        }
+        delete: {
+          args: Prisma.NotificationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>
+        }
+        update: {
+          args: Prisma.NotificationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>
+        }
+        deleteMany: {
+          args: Prisma.NotificationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NotificationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NotificationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>[]
+        }
+        upsert: {
+          args: Prisma.NotificationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>
+        }
+        aggregate: {
+          args: Prisma.NotificationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNotification>
+        }
+        groupBy: {
+          args: Prisma.NotificationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NotificationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NotificationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NotificationCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1096,6 +1246,7 @@ export const TransactionScalarFieldEnum = {
   categoryId: 'categoryId',
   toAccountId: 'toAccountId',
   adminFee: 'adminFee',
+  tags: 'tags',
   isRecurring: 'isRecurring',
   recurrenceRule: 'recurrenceRule',
   recurrenceEndDate: 'recurrenceEndDate',
@@ -1168,6 +1319,36 @@ export const GoalScalarFieldEnum = {
 } as const
 
 export type GoalScalarFieldEnum = (typeof GoalScalarFieldEnum)[keyof typeof GoalScalarFieldEnum]
+
+
+export const QuickAddScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  amount: 'amount',
+  icon: 'icon',
+  categoryId: 'categoryId',
+  accountId: 'accountId',
+  userId: 'userId',
+  order: 'order',
+  createdAt: 'createdAt'
+} as const
+
+export type QuickAddScalarFieldEnum = (typeof QuickAddScalarFieldEnum)[keyof typeof QuickAddScalarFieldEnum]
+
+
+export const NotificationScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  title: 'title',
+  message: 'message',
+  icon: 'icon',
+  isRead: 'isRead',
+  link: 'link',
+  userId: 'userId',
+  createdAt: 'createdAt'
+} as const
+
+export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1329,6 +1510,8 @@ export type GlobalOmitConfig = {
   debt?: Prisma.DebtOmit
   debtPayment?: Prisma.DebtPaymentOmit
   goal?: Prisma.GoalOmit
+  quickAdd?: Prisma.QuickAddOmit
+  notification?: Prisma.NotificationOmit
 }
 
 /* Types for Logging */

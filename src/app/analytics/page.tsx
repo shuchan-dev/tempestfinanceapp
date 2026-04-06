@@ -17,6 +17,7 @@ import { CashflowChart } from "@/components/cashflow-chart";
 import { BudgetProgressCard } from "@/components/budget-progress-card";
 import { CategoryPieChart } from "@/components/category-pie-chart";
 import { TopMerchantsList } from "@/components/top-merchants-list";
+import { SpendingComparison } from "@/components/spending-comparison";
 import { PageContainer } from "@/components/page-container";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -359,6 +360,12 @@ export default function AnalyticsPage() {
           )}
         </div>
       </section>
+
+      {/* ── Spending Comparison ─────────────────────────────────── */}
+      <section className="space-y-3 pb-8">
+        <SpendingComparison />
+      </section>
+
     </PageContainer>
   );
 }

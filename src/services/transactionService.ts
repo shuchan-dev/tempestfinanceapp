@@ -26,6 +26,7 @@ export async function createTransaction(
           recurrenceEndDate: body.recurrenceEndDate
             ? new Date(body.recurrenceEndDate)
             : null,
+          tags: body.tags || null,
         },
         include: {
           account: {

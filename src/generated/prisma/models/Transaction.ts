@@ -50,6 +50,7 @@ export type TransactionMinAggregateOutputType = {
   categoryId: string | null
   toAccountId: string | null
   adminFee: number | null
+  tags: string | null
   isRecurring: boolean | null
   recurrenceRule: string | null
   recurrenceEndDate: Date | null
@@ -71,6 +72,7 @@ export type TransactionMaxAggregateOutputType = {
   categoryId: string | null
   toAccountId: string | null
   adminFee: number | null
+  tags: string | null
   isRecurring: boolean | null
   recurrenceRule: string | null
   recurrenceEndDate: Date | null
@@ -92,6 +94,7 @@ export type TransactionCountAggregateOutputType = {
   categoryId: number
   toAccountId: number
   adminFee: number
+  tags: number
   isRecurring: number
   recurrenceRule: number
   recurrenceEndDate: number
@@ -125,6 +128,7 @@ export type TransactionMinAggregateInputType = {
   categoryId?: true
   toAccountId?: true
   adminFee?: true
+  tags?: true
   isRecurring?: true
   recurrenceRule?: true
   recurrenceEndDate?: true
@@ -146,6 +150,7 @@ export type TransactionMaxAggregateInputType = {
   categoryId?: true
   toAccountId?: true
   adminFee?: true
+  tags?: true
   isRecurring?: true
   recurrenceRule?: true
   recurrenceEndDate?: true
@@ -167,6 +172,7 @@ export type TransactionCountAggregateInputType = {
   categoryId?: true
   toAccountId?: true
   adminFee?: true
+  tags?: true
   isRecurring?: true
   recurrenceRule?: true
   recurrenceEndDate?: true
@@ -275,6 +281,7 @@ export type TransactionGroupByOutputType = {
   categoryId: string | null
   toAccountId: string | null
   adminFee: number | null
+  tags: string | null
   isRecurring: boolean
   recurrenceRule: string | null
   recurrenceEndDate: Date | null
@@ -319,6 +326,7 @@ export type TransactionWhereInput = {
   categoryId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   toAccountId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   adminFee?: Prisma.FloatNullableFilter<"Transaction"> | number | null
+  tags?: Prisma.StringNullableFilter<"Transaction"> | string | null
   isRecurring?: Prisma.BoolFilter<"Transaction"> | boolean
   recurrenceRule?: Prisma.StringNullableFilter<"Transaction"> | string | null
   recurrenceEndDate?: Prisma.DateTimeNullableFilter<"Transaction"> | Date | string | null
@@ -344,6 +352,7 @@ export type TransactionOrderByWithRelationInput = {
   categoryId?: Prisma.SortOrderInput | Prisma.SortOrder
   toAccountId?: Prisma.SortOrderInput | Prisma.SortOrder
   adminFee?: Prisma.SortOrderInput | Prisma.SortOrder
+  tags?: Prisma.SortOrderInput | Prisma.SortOrder
   isRecurring?: Prisma.SortOrder
   recurrenceRule?: Prisma.SortOrderInput | Prisma.SortOrder
   recurrenceEndDate?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -372,6 +381,7 @@ export type TransactionWhereUniqueInput = Prisma.AtLeast<{
   categoryId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   toAccountId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   adminFee?: Prisma.FloatNullableFilter<"Transaction"> | number | null
+  tags?: Prisma.StringNullableFilter<"Transaction"> | string | null
   isRecurring?: Prisma.BoolFilter<"Transaction"> | boolean
   recurrenceRule?: Prisma.StringNullableFilter<"Transaction"> | string | null
   recurrenceEndDate?: Prisma.DateTimeNullableFilter<"Transaction"> | Date | string | null
@@ -397,6 +407,7 @@ export type TransactionOrderByWithAggregationInput = {
   categoryId?: Prisma.SortOrderInput | Prisma.SortOrder
   toAccountId?: Prisma.SortOrderInput | Prisma.SortOrder
   adminFee?: Prisma.SortOrderInput | Prisma.SortOrder
+  tags?: Prisma.SortOrderInput | Prisma.SortOrder
   isRecurring?: Prisma.SortOrder
   recurrenceRule?: Prisma.SortOrderInput | Prisma.SortOrder
   recurrenceEndDate?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -426,6 +437,7 @@ export type TransactionScalarWhereWithAggregatesInput = {
   categoryId?: Prisma.StringNullableWithAggregatesFilter<"Transaction"> | string | null
   toAccountId?: Prisma.StringNullableWithAggregatesFilter<"Transaction"> | string | null
   adminFee?: Prisma.FloatNullableWithAggregatesFilter<"Transaction"> | number | null
+  tags?: Prisma.StringNullableWithAggregatesFilter<"Transaction"> | string | null
   isRecurring?: Prisma.BoolWithAggregatesFilter<"Transaction"> | boolean
   recurrenceRule?: Prisma.StringNullableWithAggregatesFilter<"Transaction"> | string | null
   recurrenceEndDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Transaction"> | Date | string | null
@@ -443,6 +455,7 @@ export type TransactionCreateInput = {
   deletedAt?: Date | string | null
   isSynced?: boolean
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -468,6 +481,7 @@ export type TransactionUncheckedCreateInput = {
   categoryId?: string | null
   toAccountId?: string | null
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -485,6 +499,7 @@ export type TransactionUpdateInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isSynced?: Prisma.BoolFieldUpdateOperationsInput | boolean
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -510,6 +525,7 @@ export type TransactionUncheckedUpdateInput = {
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -531,6 +547,7 @@ export type TransactionCreateManyInput = {
   categoryId?: string | null
   toAccountId?: string | null
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -548,6 +565,7 @@ export type TransactionUpdateManyMutationInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isSynced?: Prisma.BoolFieldUpdateOperationsInput | boolean
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -569,6 +587,7 @@ export type TransactionUncheckedUpdateManyInput = {
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -600,6 +619,7 @@ export type TransactionCountOrderByAggregateInput = {
   categoryId?: Prisma.SortOrder
   toAccountId?: Prisma.SortOrder
   adminFee?: Prisma.SortOrder
+  tags?: Prisma.SortOrder
   isRecurring?: Prisma.SortOrder
   recurrenceRule?: Prisma.SortOrder
   recurrenceEndDate?: Prisma.SortOrder
@@ -626,6 +646,7 @@ export type TransactionMaxOrderByAggregateInput = {
   categoryId?: Prisma.SortOrder
   toAccountId?: Prisma.SortOrder
   adminFee?: Prisma.SortOrder
+  tags?: Prisma.SortOrder
   isRecurring?: Prisma.SortOrder
   recurrenceRule?: Prisma.SortOrder
   recurrenceEndDate?: Prisma.SortOrder
@@ -647,6 +668,7 @@ export type TransactionMinOrderByAggregateInput = {
   categoryId?: Prisma.SortOrder
   toAccountId?: Prisma.SortOrder
   adminFee?: Prisma.SortOrder
+  tags?: Prisma.SortOrder
   isRecurring?: Prisma.SortOrder
   recurrenceRule?: Prisma.SortOrder
   recurrenceEndDate?: Prisma.SortOrder
@@ -845,6 +867,7 @@ export type TransactionCreateWithoutUserInput = {
   deletedAt?: Date | string | null
   isSynced?: boolean
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -868,6 +891,7 @@ export type TransactionUncheckedCreateWithoutUserInput = {
   categoryId?: string | null
   toAccountId?: string | null
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -917,6 +941,7 @@ export type TransactionScalarWhereInput = {
   categoryId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   toAccountId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   adminFee?: Prisma.FloatNullableFilter<"Transaction"> | number | null
+  tags?: Prisma.StringNullableFilter<"Transaction"> | string | null
   isRecurring?: Prisma.BoolFilter<"Transaction"> | boolean
   recurrenceRule?: Prisma.StringNullableFilter<"Transaction"> | string | null
   recurrenceEndDate?: Prisma.DateTimeNullableFilter<"Transaction"> | Date | string | null
@@ -934,6 +959,7 @@ export type TransactionCreateWithoutAccountInput = {
   deletedAt?: Date | string | null
   isSynced?: boolean
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -957,6 +983,7 @@ export type TransactionUncheckedCreateWithoutAccountInput = {
   categoryId?: string | null
   toAccountId?: string | null
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -983,6 +1010,7 @@ export type TransactionCreateWithoutToAccountInput = {
   deletedAt?: Date | string | null
   isSynced?: boolean
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -1006,6 +1034,7 @@ export type TransactionUncheckedCreateWithoutToAccountInput = {
   accountId: string
   categoryId?: string | null
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -1064,6 +1093,7 @@ export type TransactionCreateWithoutCategoryInput = {
   deletedAt?: Date | string | null
   isSynced?: boolean
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -1087,6 +1117,7 @@ export type TransactionUncheckedCreateWithoutCategoryInput = {
   accountId: string
   toAccountId?: string | null
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -1132,6 +1163,7 @@ export type TransactionCreateManyUserInput = {
   categoryId?: string | null
   toAccountId?: string | null
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -1149,6 +1181,7 @@ export type TransactionUpdateWithoutUserInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isSynced?: Prisma.BoolFieldUpdateOperationsInput | boolean
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1172,6 +1205,7 @@ export type TransactionUncheckedUpdateWithoutUserInput = {
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1192,6 +1226,7 @@ export type TransactionUncheckedUpdateManyWithoutUserInput = {
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1212,6 +1247,7 @@ export type TransactionCreateManyAccountInput = {
   categoryId?: string | null
   toAccountId?: string | null
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -1232,6 +1268,7 @@ export type TransactionCreateManyToAccountInput = {
   accountId: string
   categoryId?: string | null
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -1249,6 +1286,7 @@ export type TransactionUpdateWithoutAccountInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isSynced?: Prisma.BoolFieldUpdateOperationsInput | boolean
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1272,6 +1310,7 @@ export type TransactionUncheckedUpdateWithoutAccountInput = {
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1292,6 +1331,7 @@ export type TransactionUncheckedUpdateManyWithoutAccountInput = {
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1309,6 +1349,7 @@ export type TransactionUpdateWithoutToAccountInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isSynced?: Prisma.BoolFieldUpdateOperationsInput | boolean
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1332,6 +1373,7 @@ export type TransactionUncheckedUpdateWithoutToAccountInput = {
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1352,6 +1394,7 @@ export type TransactionUncheckedUpdateManyWithoutToAccountInput = {
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1372,6 +1415,7 @@ export type TransactionCreateManyCategoryInput = {
   accountId: string
   toAccountId?: string | null
   adminFee?: number | null
+  tags?: string | null
   isRecurring?: boolean
   recurrenceRule?: string | null
   recurrenceEndDate?: Date | string | null
@@ -1389,6 +1433,7 @@ export type TransactionUpdateWithoutCategoryInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isSynced?: Prisma.BoolFieldUpdateOperationsInput | boolean
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1412,6 +1457,7 @@ export type TransactionUncheckedUpdateWithoutCategoryInput = {
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
   toAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1432,6 +1478,7 @@ export type TransactionUncheckedUpdateManyWithoutCategoryInput = {
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
   toAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminFee?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
   recurrenceRule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recurrenceEndDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1455,6 +1502,7 @@ export type TransactionSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   categoryId?: boolean
   toAccountId?: boolean
   adminFee?: boolean
+  tags?: boolean
   isRecurring?: boolean
   recurrenceRule?: boolean
   recurrenceEndDate?: boolean
@@ -1480,6 +1528,7 @@ export type TransactionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   categoryId?: boolean
   toAccountId?: boolean
   adminFee?: boolean
+  tags?: boolean
   isRecurring?: boolean
   recurrenceRule?: boolean
   recurrenceEndDate?: boolean
@@ -1505,6 +1554,7 @@ export type TransactionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   categoryId?: boolean
   toAccountId?: boolean
   adminFee?: boolean
+  tags?: boolean
   isRecurring?: boolean
   recurrenceRule?: boolean
   recurrenceEndDate?: boolean
@@ -1530,6 +1580,7 @@ export type TransactionSelectScalar = {
   categoryId?: boolean
   toAccountId?: boolean
   adminFee?: boolean
+  tags?: boolean
   isRecurring?: boolean
   recurrenceRule?: boolean
   recurrenceEndDate?: boolean
@@ -1537,7 +1588,7 @@ export type TransactionSelectScalar = {
   isRecurringInstance?: boolean
 }
 
-export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "amount" | "type" | "description" | "date" | "createdAt" | "deletedAt" | "isSynced" | "userId" | "accountId" | "categoryId" | "toAccountId" | "adminFee" | "isRecurring" | "recurrenceRule" | "recurrenceEndDate" | "recurrenceParentId" | "isRecurringInstance", ExtArgs["result"]["transaction"]>
+export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "amount" | "type" | "description" | "date" | "createdAt" | "deletedAt" | "isSynced" | "userId" | "accountId" | "categoryId" | "toAccountId" | "adminFee" | "tags" | "isRecurring" | "recurrenceRule" | "recurrenceEndDate" | "recurrenceParentId" | "isRecurringInstance", ExtArgs["result"]["transaction"]>
 export type TransactionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   account?: boolean | Prisma.AccountDefaultArgs<ExtArgs>
@@ -1579,6 +1630,7 @@ export type $TransactionPayload<ExtArgs extends runtime.Types.Extensions.Interna
     categoryId: string | null
     toAccountId: string | null
     adminFee: number | null
+    tags: string | null
     isRecurring: boolean
     recurrenceRule: string | null
     recurrenceEndDate: Date | null
@@ -2024,6 +2076,7 @@ export interface TransactionFieldRefs {
   readonly categoryId: Prisma.FieldRef<"Transaction", 'String'>
   readonly toAccountId: Prisma.FieldRef<"Transaction", 'String'>
   readonly adminFee: Prisma.FieldRef<"Transaction", 'Float'>
+  readonly tags: Prisma.FieldRef<"Transaction", 'String'>
   readonly isRecurring: Prisma.FieldRef<"Transaction", 'Boolean'>
   readonly recurrenceRule: Prisma.FieldRef<"Transaction", 'String'>
   readonly recurrenceEndDate: Prisma.FieldRef<"Transaction", 'DateTime'>

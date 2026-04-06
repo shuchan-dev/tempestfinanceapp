@@ -245,6 +245,7 @@ export type CategoryWhereInput = {
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   transactions?: Prisma.TransactionListRelationFilter
   budgets?: Prisma.BudgetListRelationFilter
+  quickAdds?: Prisma.QuickAddListRelationFilter
 }
 
 export type CategoryOrderByWithRelationInput = {
@@ -261,6 +262,7 @@ export type CategoryOrderByWithRelationInput = {
   user?: Prisma.UserOrderByWithRelationInput
   transactions?: Prisma.TransactionOrderByRelationAggregateInput
   budgets?: Prisma.BudgetOrderByRelationAggregateInput
+  quickAdds?: Prisma.QuickAddOrderByRelationAggregateInput
 }
 
 export type CategoryWhereUniqueInput = Prisma.AtLeast<{
@@ -280,6 +282,7 @@ export type CategoryWhereUniqueInput = Prisma.AtLeast<{
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   transactions?: Prisma.TransactionListRelationFilter
   budgets?: Prisma.BudgetListRelationFilter
+  quickAdds?: Prisma.QuickAddListRelationFilter
 }, "id">
 
 export type CategoryOrderByWithAggregationInput = {
@@ -324,6 +327,7 @@ export type CategoryCreateInput = {
   user: Prisma.UserCreateNestedOneWithoutCategoriesInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutCategoryInput
   budgets?: Prisma.BudgetCreateNestedManyWithoutCategoryInput
+  quickAdds?: Prisma.QuickAddCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryUncheckedCreateInput = {
@@ -338,6 +342,7 @@ export type CategoryUncheckedCreateInput = {
   children?: Prisma.CategoryUncheckedCreateNestedManyWithoutParentInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutCategoryInput
   budgets?: Prisma.BudgetUncheckedCreateNestedManyWithoutCategoryInput
+  quickAdds?: Prisma.QuickAddUncheckedCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryUpdateInput = {
@@ -352,6 +357,7 @@ export type CategoryUpdateInput = {
   user?: Prisma.UserUpdateOneRequiredWithoutCategoriesNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutCategoryNestedInput
   budgets?: Prisma.BudgetUpdateManyWithoutCategoryNestedInput
+  quickAdds?: Prisma.QuickAddUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryUncheckedUpdateInput = {
@@ -366,6 +372,7 @@ export type CategoryUncheckedUpdateInput = {
   children?: Prisma.CategoryUncheckedUpdateManyWithoutParentNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutCategoryNestedInput
   budgets?: Prisma.BudgetUncheckedUpdateManyWithoutCategoryNestedInput
+  quickAdds?: Prisma.QuickAddUncheckedUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryCreateManyInput = {
@@ -598,6 +605,20 @@ export type CategoryUpdateOneRequiredWithoutBudgetsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.CategoryUpdateToOneWithWhereWithoutBudgetsInput, Prisma.CategoryUpdateWithoutBudgetsInput>, Prisma.CategoryUncheckedUpdateWithoutBudgetsInput>
 }
 
+export type CategoryCreateNestedOneWithoutQuickAddsInput = {
+  create?: Prisma.XOR<Prisma.CategoryCreateWithoutQuickAddsInput, Prisma.CategoryUncheckedCreateWithoutQuickAddsInput>
+  connectOrCreate?: Prisma.CategoryCreateOrConnectWithoutQuickAddsInput
+  connect?: Prisma.CategoryWhereUniqueInput
+}
+
+export type CategoryUpdateOneRequiredWithoutQuickAddsNestedInput = {
+  create?: Prisma.XOR<Prisma.CategoryCreateWithoutQuickAddsInput, Prisma.CategoryUncheckedCreateWithoutQuickAddsInput>
+  connectOrCreate?: Prisma.CategoryCreateOrConnectWithoutQuickAddsInput
+  upsert?: Prisma.CategoryUpsertWithoutQuickAddsInput
+  connect?: Prisma.CategoryWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CategoryUpdateToOneWithWhereWithoutQuickAddsInput, Prisma.CategoryUpdateWithoutQuickAddsInput>, Prisma.CategoryUncheckedUpdateWithoutQuickAddsInput>
+}
+
 export type CategoryCreateWithoutUserInput = {
   id?: string
   name: string
@@ -609,6 +630,7 @@ export type CategoryCreateWithoutUserInput = {
   children?: Prisma.CategoryCreateNestedManyWithoutParentInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutCategoryInput
   budgets?: Prisma.BudgetCreateNestedManyWithoutCategoryInput
+  quickAdds?: Prisma.QuickAddCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryUncheckedCreateWithoutUserInput = {
@@ -622,6 +644,7 @@ export type CategoryUncheckedCreateWithoutUserInput = {
   children?: Prisma.CategoryUncheckedCreateNestedManyWithoutParentInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutCategoryInput
   budgets?: Prisma.BudgetUncheckedCreateNestedManyWithoutCategoryInput
+  quickAdds?: Prisma.QuickAddUncheckedCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryCreateOrConnectWithoutUserInput = {
@@ -674,6 +697,7 @@ export type CategoryCreateWithoutChildrenInput = {
   user: Prisma.UserCreateNestedOneWithoutCategoriesInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutCategoryInput
   budgets?: Prisma.BudgetCreateNestedManyWithoutCategoryInput
+  quickAdds?: Prisma.QuickAddCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryUncheckedCreateWithoutChildrenInput = {
@@ -687,6 +711,7 @@ export type CategoryUncheckedCreateWithoutChildrenInput = {
   userId: string
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutCategoryInput
   budgets?: Prisma.BudgetUncheckedCreateNestedManyWithoutCategoryInput
+  quickAdds?: Prisma.QuickAddUncheckedCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryCreateOrConnectWithoutChildrenInput = {
@@ -705,6 +730,7 @@ export type CategoryCreateWithoutParentInput = {
   user: Prisma.UserCreateNestedOneWithoutCategoriesInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutCategoryInput
   budgets?: Prisma.BudgetCreateNestedManyWithoutCategoryInput
+  quickAdds?: Prisma.QuickAddCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryUncheckedCreateWithoutParentInput = {
@@ -718,6 +744,7 @@ export type CategoryUncheckedCreateWithoutParentInput = {
   children?: Prisma.CategoryUncheckedCreateNestedManyWithoutParentInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutCategoryInput
   budgets?: Prisma.BudgetUncheckedCreateNestedManyWithoutCategoryInput
+  quickAdds?: Prisma.QuickAddUncheckedCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryCreateOrConnectWithoutParentInput = {
@@ -751,6 +778,7 @@ export type CategoryUpdateWithoutChildrenInput = {
   user?: Prisma.UserUpdateOneRequiredWithoutCategoriesNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutCategoryNestedInput
   budgets?: Prisma.BudgetUpdateManyWithoutCategoryNestedInput
+  quickAdds?: Prisma.QuickAddUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryUncheckedUpdateWithoutChildrenInput = {
@@ -764,6 +792,7 @@ export type CategoryUncheckedUpdateWithoutChildrenInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutCategoryNestedInput
   budgets?: Prisma.BudgetUncheckedUpdateManyWithoutCategoryNestedInput
+  quickAdds?: Prisma.QuickAddUncheckedUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryUpsertWithWhereUniqueWithoutParentInput = {
@@ -793,6 +822,7 @@ export type CategoryCreateWithoutTransactionsInput = {
   children?: Prisma.CategoryCreateNestedManyWithoutParentInput
   user: Prisma.UserCreateNestedOneWithoutCategoriesInput
   budgets?: Prisma.BudgetCreateNestedManyWithoutCategoryInput
+  quickAdds?: Prisma.QuickAddCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryUncheckedCreateWithoutTransactionsInput = {
@@ -806,6 +836,7 @@ export type CategoryUncheckedCreateWithoutTransactionsInput = {
   userId: string
   children?: Prisma.CategoryUncheckedCreateNestedManyWithoutParentInput
   budgets?: Prisma.BudgetUncheckedCreateNestedManyWithoutCategoryInput
+  quickAdds?: Prisma.QuickAddUncheckedCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryCreateOrConnectWithoutTransactionsInput = {
@@ -835,6 +866,7 @@ export type CategoryUpdateWithoutTransactionsInput = {
   children?: Prisma.CategoryUpdateManyWithoutParentNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutCategoriesNestedInput
   budgets?: Prisma.BudgetUpdateManyWithoutCategoryNestedInput
+  quickAdds?: Prisma.QuickAddUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryUncheckedUpdateWithoutTransactionsInput = {
@@ -848,6 +880,7 @@ export type CategoryUncheckedUpdateWithoutTransactionsInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   children?: Prisma.CategoryUncheckedUpdateManyWithoutParentNestedInput
   budgets?: Prisma.BudgetUncheckedUpdateManyWithoutCategoryNestedInput
+  quickAdds?: Prisma.QuickAddUncheckedUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryCreateWithoutBudgetsInput = {
@@ -861,6 +894,7 @@ export type CategoryCreateWithoutBudgetsInput = {
   children?: Prisma.CategoryCreateNestedManyWithoutParentInput
   user: Prisma.UserCreateNestedOneWithoutCategoriesInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutCategoryInput
+  quickAdds?: Prisma.QuickAddCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryUncheckedCreateWithoutBudgetsInput = {
@@ -874,6 +908,7 @@ export type CategoryUncheckedCreateWithoutBudgetsInput = {
   userId: string
   children?: Prisma.CategoryUncheckedCreateNestedManyWithoutParentInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutCategoryInput
+  quickAdds?: Prisma.QuickAddUncheckedCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryCreateOrConnectWithoutBudgetsInput = {
@@ -903,6 +938,7 @@ export type CategoryUpdateWithoutBudgetsInput = {
   children?: Prisma.CategoryUpdateManyWithoutParentNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutCategoriesNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutCategoryNestedInput
+  quickAdds?: Prisma.QuickAddUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryUncheckedUpdateWithoutBudgetsInput = {
@@ -916,6 +952,79 @@ export type CategoryUncheckedUpdateWithoutBudgetsInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   children?: Prisma.CategoryUncheckedUpdateManyWithoutParentNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutCategoryNestedInput
+  quickAdds?: Prisma.QuickAddUncheckedUpdateManyWithoutCategoryNestedInput
+}
+
+export type CategoryCreateWithoutQuickAddsInput = {
+  id?: string
+  name: string
+  type: string
+  icon?: string | null
+  order?: number
+  deletedAt?: Date | string | null
+  parent?: Prisma.CategoryCreateNestedOneWithoutChildrenInput
+  children?: Prisma.CategoryCreateNestedManyWithoutParentInput
+  user: Prisma.UserCreateNestedOneWithoutCategoriesInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutCategoryInput
+  budgets?: Prisma.BudgetCreateNestedManyWithoutCategoryInput
+}
+
+export type CategoryUncheckedCreateWithoutQuickAddsInput = {
+  id?: string
+  name: string
+  type: string
+  icon?: string | null
+  order?: number
+  deletedAt?: Date | string | null
+  parentId?: string | null
+  userId: string
+  children?: Prisma.CategoryUncheckedCreateNestedManyWithoutParentInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutCategoryInput
+  budgets?: Prisma.BudgetUncheckedCreateNestedManyWithoutCategoryInput
+}
+
+export type CategoryCreateOrConnectWithoutQuickAddsInput = {
+  where: Prisma.CategoryWhereUniqueInput
+  create: Prisma.XOR<Prisma.CategoryCreateWithoutQuickAddsInput, Prisma.CategoryUncheckedCreateWithoutQuickAddsInput>
+}
+
+export type CategoryUpsertWithoutQuickAddsInput = {
+  update: Prisma.XOR<Prisma.CategoryUpdateWithoutQuickAddsInput, Prisma.CategoryUncheckedUpdateWithoutQuickAddsInput>
+  create: Prisma.XOR<Prisma.CategoryCreateWithoutQuickAddsInput, Prisma.CategoryUncheckedCreateWithoutQuickAddsInput>
+  where?: Prisma.CategoryWhereInput
+}
+
+export type CategoryUpdateToOneWithWhereWithoutQuickAddsInput = {
+  where?: Prisma.CategoryWhereInput
+  data: Prisma.XOR<Prisma.CategoryUpdateWithoutQuickAddsInput, Prisma.CategoryUncheckedUpdateWithoutQuickAddsInput>
+}
+
+export type CategoryUpdateWithoutQuickAddsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  parent?: Prisma.CategoryUpdateOneWithoutChildrenNestedInput
+  children?: Prisma.CategoryUpdateManyWithoutParentNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutCategoriesNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutCategoryNestedInput
+  budgets?: Prisma.BudgetUpdateManyWithoutCategoryNestedInput
+}
+
+export type CategoryUncheckedUpdateWithoutQuickAddsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  children?: Prisma.CategoryUncheckedUpdateManyWithoutParentNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutCategoryNestedInput
+  budgets?: Prisma.BudgetUncheckedUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryCreateManyUserInput = {
@@ -939,6 +1048,7 @@ export type CategoryUpdateWithoutUserInput = {
   children?: Prisma.CategoryUpdateManyWithoutParentNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutCategoryNestedInput
   budgets?: Prisma.BudgetUpdateManyWithoutCategoryNestedInput
+  quickAdds?: Prisma.QuickAddUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryUncheckedUpdateWithoutUserInput = {
@@ -952,6 +1062,7 @@ export type CategoryUncheckedUpdateWithoutUserInput = {
   children?: Prisma.CategoryUncheckedUpdateManyWithoutParentNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutCategoryNestedInput
   budgets?: Prisma.BudgetUncheckedUpdateManyWithoutCategoryNestedInput
+  quickAdds?: Prisma.QuickAddUncheckedUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryUncheckedUpdateManyWithoutUserInput = {
@@ -985,6 +1096,7 @@ export type CategoryUpdateWithoutParentInput = {
   user?: Prisma.UserUpdateOneRequiredWithoutCategoriesNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutCategoryNestedInput
   budgets?: Prisma.BudgetUpdateManyWithoutCategoryNestedInput
+  quickAdds?: Prisma.QuickAddUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryUncheckedUpdateWithoutParentInput = {
@@ -998,6 +1110,7 @@ export type CategoryUncheckedUpdateWithoutParentInput = {
   children?: Prisma.CategoryUncheckedUpdateManyWithoutParentNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutCategoryNestedInput
   budgets?: Prisma.BudgetUncheckedUpdateManyWithoutCategoryNestedInput
+  quickAdds?: Prisma.QuickAddUncheckedUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryUncheckedUpdateManyWithoutParentInput = {
@@ -1019,12 +1132,14 @@ export type CategoryCountOutputType = {
   children: number
   transactions: number
   budgets: number
+  quickAdds: number
 }
 
 export type CategoryCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   children?: boolean | CategoryCountOutputTypeCountChildrenArgs
   transactions?: boolean | CategoryCountOutputTypeCountTransactionsArgs
   budgets?: boolean | CategoryCountOutputTypeCountBudgetsArgs
+  quickAdds?: boolean | CategoryCountOutputTypeCountQuickAddsArgs
 }
 
 /**
@@ -1058,6 +1173,13 @@ export type CategoryCountOutputTypeCountBudgetsArgs<ExtArgs extends runtime.Type
   where?: Prisma.BudgetWhereInput
 }
 
+/**
+ * CategoryCountOutputType without action
+ */
+export type CategoryCountOutputTypeCountQuickAddsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.QuickAddWhereInput
+}
+
 
 export type CategorySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1073,6 +1195,7 @@ export type CategorySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   transactions?: boolean | Prisma.Category$transactionsArgs<ExtArgs>
   budgets?: boolean | Prisma.Category$budgetsArgs<ExtArgs>
+  quickAdds?: boolean | Prisma.Category$quickAddsArgs<ExtArgs>
   _count?: boolean | Prisma.CategoryCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["category"]>
 
@@ -1120,6 +1243,7 @@ export type CategoryInclude<ExtArgs extends runtime.Types.Extensions.InternalArg
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   transactions?: boolean | Prisma.Category$transactionsArgs<ExtArgs>
   budgets?: boolean | Prisma.Category$budgetsArgs<ExtArgs>
+  quickAdds?: boolean | Prisma.Category$quickAddsArgs<ExtArgs>
   _count?: boolean | Prisma.CategoryCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type CategoryIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1139,6 +1263,7 @@ export type $CategoryPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     user: Prisma.$UserPayload<ExtArgs>
     transactions: Prisma.$TransactionPayload<ExtArgs>[]
     budgets: Prisma.$BudgetPayload<ExtArgs>[]
+    quickAdds: Prisma.$QuickAddPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1548,6 +1673,7 @@ export interface Prisma__CategoryClient<T, Null = never, ExtArgs extends runtime
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   transactions<T extends Prisma.Category$transactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Category$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   budgets<T extends Prisma.Category$budgetsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Category$budgetsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BudgetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  quickAdds<T extends Prisma.Category$quickAddsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Category$quickAddsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$QuickAddPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2072,6 +2198,30 @@ export type Category$budgetsArgs<ExtArgs extends runtime.Types.Extensions.Intern
   take?: number
   skip?: number
   distinct?: Prisma.BudgetScalarFieldEnum | Prisma.BudgetScalarFieldEnum[]
+}
+
+/**
+ * Category.quickAdds
+ */
+export type Category$quickAddsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the QuickAdd
+   */
+  select?: Prisma.QuickAddSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the QuickAdd
+   */
+  omit?: Prisma.QuickAddOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.QuickAddInclude<ExtArgs> | null
+  where?: Prisma.QuickAddWhereInput
+  orderBy?: Prisma.QuickAddOrderByWithRelationInput | Prisma.QuickAddOrderByWithRelationInput[]
+  cursor?: Prisma.QuickAddWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.QuickAddScalarFieldEnum | Prisma.QuickAddScalarFieldEnum[]
 }
 
 /**

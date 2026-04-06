@@ -30,6 +30,8 @@ model User {
   debts        Debt[]
   debtPayments DebtPayment[]
   goals        Goal[]
+  quickAdds    QuickAdd[]
+  notifications Notification[]
 }
 
 // ============================================================
@@ -57,6 +59,7 @@ model Account {
   transactions Transaction[] @relation("AccountTransactions")
   transfersIn  Transaction[] @relation("TransferTo")
   goals        Goal[]
+  quickAdds    QuickAdd[]
 }
 
 // ============================================================
@@ -77,12 +80,12 @@ model Category {
   parent   Category?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: SetNull)
   children Category[] @relation("SubCategories")
 
-  // ─── Relasi ke User ──────────────────────────────────────
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   transactions Transaction[]
   budgets      Budget[]
+  quickAdds    QuickAdd[]
 }
 
 // ============================================================
@@ -111,6 +114,7 @@ model Transaction {
   toAccount   Account? @relation("TransferTo", fields: [toAccountId], references: [id], onDelete: Cascade)
 
   adminFee Float? @default(0)
+  tags     String? // Comma-separated tags, e.g., "project,personal,meeting"
 
   // ─── Recurring Transactions Support ──────────────────────
   isRecurring         Boolean   @default(false)
@@ -208,4 +212,44 @@ model Goal {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+}
+
+// ============================================================
+// MODEL QUICKADD — Preset transaksi cepat (1-tap entry)
+// ============================================================
+model QuickAdd {
+  id         String   @id @default(cuid())
+  name       String   // Label tampilan (e.g., "Kopi Pagi")
+  amount     Float    // Nominal default
+  icon       String?  // Emoji icon (e.g., "☕")
+  
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  accountId  String
+  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  order      Int      @default(0) // Urutan tampil
+  createdAt  DateTime @default(now())
+}
+
+// ============================================================
+// MODEL NOTIFICATION — Riwayat notifikasi user
+// ============================================================
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // "BUDGET_ALERT" | "DEBT_DUE" | "GOAL_REACHED" | "SYSTEM"
+  title     String   // Judul notifikasi
+  message   String   // Isi pesan
+  icon      String?  // Emoji icon
+  isRead    Boolean  @default(false)
+  link      String?  // URL untuk navigate saat di-tap (optional)
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
 }

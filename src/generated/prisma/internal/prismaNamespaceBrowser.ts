@@ -58,7 +58,9 @@ export const ModelName = {
   Budget: 'Budget',
   Debt: 'Debt',
   DebtPayment: 'DebtPayment',
-  Goal: 'Goal'
+  Goal: 'Goal',
+  QuickAdd: 'QuickAdd',
+  Notification: 'Notification'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -131,6 +133,7 @@ export const TransactionScalarFieldEnum = {
   categoryId: 'categoryId',
   toAccountId: 'toAccountId',
   adminFee: 'adminFee',
+  tags: 'tags',
   isRecurring: 'isRecurring',
   recurrenceRule: 'recurrenceRule',
   recurrenceEndDate: 'recurrenceEndDate',
@@ -203,6 +206,36 @@ export const GoalScalarFieldEnum = {
 } as const
 
 export type GoalScalarFieldEnum = (typeof GoalScalarFieldEnum)[keyof typeof GoalScalarFieldEnum]
+
+
+export const QuickAddScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  amount: 'amount',
+  icon: 'icon',
+  categoryId: 'categoryId',
+  accountId: 'accountId',
+  userId: 'userId',
+  order: 'order',
+  createdAt: 'createdAt'
+} as const
+
+export type QuickAddScalarFieldEnum = (typeof QuickAddScalarFieldEnum)[keyof typeof QuickAddScalarFieldEnum]
+
+
+export const NotificationScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  title: 'title',
+  message: 'message',
+  icon: 'icon',
+  isRead: 'isRead',
+  link: 'link',
+  userId: 'userId',
+  createdAt: 'createdAt'
+} as const
+
+export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
 
 
 export const SortOrder = {

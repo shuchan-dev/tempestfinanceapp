@@ -21,7 +21,9 @@ import { FilterButton, type FilterState } from "@/components/filter-button";
 import { TransactionActionsMenu } from "@/components/transaction-actions-menu";
 import { TransactionForm } from "@/components/transaction-form";
 import { ExportButton } from "@/components/export-button";
+import { BulkActionMenu } from "@/components/bulk-action-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CheckSquare, Square } from "lucide-react";
 import {
   formatCurrency,
   formatDate,
@@ -44,6 +46,10 @@ export default function HistoryPage() {
   const [editingTransaction, setEditingTransaction] =
     useState<TransactionData | null>(null);
 
+  // Bulk Selection
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
   // Build query string from filters and search
   const buildQueryString = () => {
     const params = new URLSearchParams();
@@ -58,6 +64,7 @@ export default function HistoryPage() {
       params.append("amountMax", filters.amountMax.toString());
     if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
     if (filters.dateTo) params.append("dateTo", filters.dateTo);
+    if ((filters as any).tag) params.append("tag", (filters as any).tag);
     return `/api/transactions?${params.toString()}`;
   };
 
@@ -170,9 +177,25 @@ export default function HistoryPage() {
           <div className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             {displayedTransactions.length} transaksi
           </div>
-          {displayedTransactions.length > 0 && (
-            <ExportButton transactions={displayedTransactions} />
-          )}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setIsSelecting(!isSelecting);
+                if (isSelecting) setSelectedIds([]);
+              }}
+              className={cn(
+                "text-sm font-medium px-3 py-1.5 rounded-lg transition-colors border",
+                isSelecting 
+                  ? "bg-zinc-100 text-zinc-900 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700" 
+                  : "bg-transparent text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-900/50 dark:hover:bg-emerald-900/20"
+              )}
+            >
+              {isSelecting ? "Batal" : "Pilih"}
+            </button>
+            {displayedTransactions.length > 0 && !isSelecting && (
+              <ExportButton transactions={displayedTransactions} />
+            )}
+          </div>
         </div>
         <SearchInput
           value={searchQuery}
@@ -186,6 +209,18 @@ export default function HistoryPage() {
           categories={categories}
           accounts={accounts}
         />
+        {(filters as any).tag && (
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded-md flex items-center gap-1 dark:bg-indigo-900/50 dark:text-indigo-300">
+              #{ (filters as any).tag }
+              <button onClick={() => {
+                const newFilters = { ...filters };
+                delete (newFilters as any).tag;
+                setFilters(newFilters);
+              }} className="ml-1 text-indigo-400 hover:text-indigo-600">✕</button>
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ── Calendar View ─────────────────────────────────────── */}
@@ -267,21 +302,46 @@ export default function HistoryPage() {
             </p>
           </div>
         ) : (
-          displayedTransactions.map((tx) => (
-            <div
-              key={tx.id}
-              className="flex items-center justify-between rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm"
-            >
-              {/* Left */}
-              <div className="flex items-center gap-3 flex-1">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xl shrink-0">
-                  {tx.type === "TRANSFER" ? (
-                    <ArrowRightLeft className="h-5 w-5 text-blue-500" />
+          displayedTransactions.map((tx) => {
+            const isSelected = selectedIds.includes(tx.id);
+            return (
+              <div
+                key={tx.id}
+                onClick={() => {
+                  if (isSelecting) {
+                    setSelectedIds((prev) =>
+                      prev.includes(tx.id) ? prev.filter((id) => id !== tx.id) : [...prev, tx.id]
+                    );
+                  }
+                }}
+                className={cn(
+                  "flex items-center justify-between rounded-2xl p-4 shadow-sm transition-all relative overflow-hidden",
+                  isSelecting ? "cursor-pointer" : "",
+                  isSelected 
+                    ? "bg-emerald-50 border-emerald-500 shadow-md ring-1 ring-emerald-500 dark:bg-emerald-900/20" 
+                    : "bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800"
+                )}
+              >
+                {/* Left */}
+                <div className="flex items-center gap-3 flex-1">
+                  {isSelecting ? (
+                    <div className="shrink-0 mr-1 transition-all">
+                      {isSelected ? (
+                        <CheckSquare className="h-6 w-6 text-emerald-500" />
+                      ) : (
+                        <Square className="h-6 w-6 text-zinc-300 dark:text-zinc-600" />
+                      )}
+                    </div>
                   ) : (
-                    tx.category?.icon || "💵"
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xl shrink-0">
+                      {tx.type === "TRANSFER" ? (
+                        <ArrowRightLeft className="h-5 w-5 text-blue-500" />
+                      ) : (
+                        tx.category?.icon || "💵"
+                      )}
+                    </div>
                   )}
-                </div>
-                <div className="flex flex-col">
+                  <div className="flex flex-col">
                   <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm leading-tight">
                     {tx.type === "TRANSFER"
                       ? "Transfer Saldo"
@@ -294,6 +354,22 @@ export default function HistoryPage() {
                   <span className="text-[10px] text-zinc-400 mt-0.5 font-medium">
                     {formatRelativeDate(tx.date)}
                   </span>
+                  {tx.tags && (
+                    <div className="flex gap-1 flex-wrap mt-1">
+                      {tx.tags.split(",").map((tag) => (
+                        <span
+                          key={tag}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFilters({ ...filters, tag: tag.trim() } as any);
+                          }}
+                          className="text-[9px] px-1.5 py-0.5 cursor-pointer rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 font-medium hover:opacity-80"
+                        >
+                          #{tag.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -327,13 +403,16 @@ export default function HistoryPage() {
                 </div>
 
                 {/* Actions Menu */}
-                <TransactionActionsMenu
-                  transactionId={tx.id}
-                  onEdit={() => setEditingTransaction(tx)}
-                />
+                {!isSelecting && (
+                  <TransactionActionsMenu
+                    transactionId={tx.id}
+                    onEdit={() => setEditingTransaction(tx)}
+                  />
+                )}
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -350,6 +429,25 @@ export default function HistoryPage() {
           );
         }}
       />
+      
+      {/* Bulk Action Menu */}
+      {isSelecting && selectedIds.length > 0 && (
+        <BulkActionMenu
+          selectedIds={selectedIds}
+          categories={categories}
+          onClearSelection={() => {
+            setSelectedIds([]);
+            setIsSelecting(false);
+          }}
+          onSuccess={() => {
+            mutate(
+              (key) => typeof key === "string" && key.includes("/api/transactions"),
+              undefined,
+              { revalidate: true }
+            );
+          }}
+        />
+      )}
     </PageContainer>
   );
 }

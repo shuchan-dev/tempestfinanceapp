@@ -13,6 +13,9 @@ import { TransactionForm } from "@/components/transaction-form";
 import { BudgetAlertBanner } from "@/components/budget-alert-banner";
 import { GoalCard } from "@/components/goal-card";
 import { GoalForm } from "@/components/goal-form";
+import { QuickAddPanel } from "@/components/quick-add-panel";
+import { BalanceHistoryChart } from "@/components/balance-history-chart";
+import { NotificationBell } from "@/components/notification-bell";
 import { PageContainer } from "@/components/page-container";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Receipt, AlertCircle, ArrowRightLeft } from "lucide-react";
@@ -26,6 +29,7 @@ export default function Dashboard() {
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(
     new Set(),
   );
+  const [selectedChartAccount, setSelectedChartAccount] = useState<string>("");
 
   // Fetch budget alerts
   const { data: budgetRes } = useSWR<{
@@ -72,17 +76,20 @@ export default function Dashboard() {
       )}
 
       {/* Header section (Total Balance) */}
-      <header className="space-y-2">
-        <h2 className="text-sm font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-          Total Saldo
-        </h2>
-        {accountsLoading ? (
-          <Skeleton className="h-12 w-48 rounded-lg" />
-        ) : (
-          <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {formatCurrency(totalBalance)}
-          </h1>
-        )}
+      <header className="flex justify-between items-start pt-2 pb-4">
+        <div className="space-y-2">
+          <h2 className="text-sm font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
+            Total Saldo
+          </h2>
+          {accountsLoading ? (
+            <Skeleton className="h-12 w-48 rounded-lg" />
+          ) : (
+            <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
+              {formatCurrency(totalBalance)}
+            </h1>
+          )}
+        </div>
+        <NotificationBell />
       </header>
 
       {/* Accounts Horizontal Scroll */}
@@ -138,6 +145,31 @@ export default function Dashboard() {
         )}
       </section>
 
+      {/* Balance History Chart */}
+      <section className="mt-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            Riwayat Saldo
+          </h2>
+          <select
+            className="rounded-lg border-zinc-200 bg-white p-2 text-xs shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+            value={selectedChartAccount || (accounts[0]?.id ?? "")}
+            onChange={(e) => setSelectedChartAccount(e.target.value)}
+          >
+            {accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm">
+          <BalanceHistoryChart
+            accountId={selectedChartAccount || accounts[0]?.id}
+          />
+        </div>
+      </section>
+
       {/* Goals Section */}
       <section className="mt-6">
         <div className="flex items-center justify-between mb-4">
@@ -166,6 +198,14 @@ export default function Dashboard() {
             ))}
           </div>
         )}
+      </section>
+
+      {/* Quick Add Section */}
+      <section className="mt-6">
+        <h3 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mb-4">
+          ⚡ Quick Add
+        </h3>
+        <QuickAddPanel />
       </section>
 
       {/* Recent Transactions */}
