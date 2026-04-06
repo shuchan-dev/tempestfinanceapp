@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useMemo } from "react";
+import useSWR from "swr";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import {
   formatCurrency,
@@ -8,16 +10,67 @@ import {
   getTransactionSign,
 } from "@/lib/utils";
 import { TransactionForm } from "@/components/transaction-form";
+import { BudgetAlertBanner } from "@/components/budget-alert-banner";
+import { GoalCard } from "@/components/goal-card";
+import { GoalForm } from "@/components/goal-form";
+import { PageContainer } from "@/components/page-container";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Receipt, AlertCircle, ArrowRightLeft } from "lucide-react";
 import Link from "next/link";
-
-
+import type { BudgetStatus } from "@/lib/budget-checker";
+import type { GoalData } from "@/types";
 
 export default function Dashboard() {
-  const { accounts, transactions, totalBalance, accountsLoading, txLoading } = useDashboardData();
+  const { accounts, transactions, totalBalance, accountsLoading, txLoading } =
+    useDashboardData();
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(
+    new Set(),
+  );
+
+  // Fetch budget alerts
+  const { data: budgetRes } = useSWR<{
+    success: boolean;
+    data: BudgetStatus[];
+  }>("/api/budgets/status");
+  const budgetAlerts = budgetRes?.data ?? [];
+
+  // Fetch goals
+  const { data: goalsRes } = useSWR<{
+    success: boolean;
+    data: GoalData[];
+  }>("/api/goals");
+  const goals = goalsRes?.data ?? [];
+
+  // Filter out dismissed alerts
+  const visibleAlerts = useMemo(
+    () =>
+      budgetAlerts.filter((alert) => !dismissedAlerts.has(alert.categoryId)),
+    [budgetAlerts, dismissedAlerts],
+  );
+
+  const handleDismissAlert = (categoryId: string) => {
+    setDismissedAlerts((prev) => new Set([...prev, categoryId]));
+  };
   return (
-    <div className="flex flex-col gap-6 p-6 pt-10 pb-32">
+    <PageContainer>
+      {/* Budget Alerts Section */}
+      {visibleAlerts.length > 0 && (
+        <section className="space-y-2">
+          {visibleAlerts.map((alert) => (
+            <BudgetAlertBanner
+              key={alert.categoryId}
+              categoryName={alert.categoryName}
+              categoryIcon={alert.categoryIcon}
+              percentage={alert.percentage}
+              spent={alert.spent}
+              budget={alert.budgetAmount}
+              isExceeded={alert.isExceeded}
+              onDismiss={() => handleDismissAlert(alert.categoryId)}
+            />
+          ))}
+        </section>
+      )}
+
       {/* Header section (Total Balance) */}
       <header className="space-y-2">
         <h2 className="text-sm font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
@@ -38,7 +91,7 @@ export default function Dashboard() {
           [1, 2].map((i) => (
             <Skeleton
               key={i}
-              className="h-32 w-48 min-w-[192px] rounded-2xl shrink-0"
+              className="h-32 w-48 min-w-48 rounded-2xl shrink-0"
             />
           ))
         ) : accounts.length === 0 ? (
@@ -50,7 +103,7 @@ export default function Dashboard() {
           accounts.map((acc) => (
             <div
               key={acc.id}
-              className="flex h-32 min-w-[192px] flex-col justify-between rounded-2xl bg-zinc-900 p-5 shadow-md snap-center dark:bg-zinc-800"
+              className="flex h-32 min-w-48 flex-col justify-between rounded-2xl bg-zinc-900 p-5 shadow-md snap-center dark:bg-zinc-800"
               style={{
                 backgroundColor: acc.color ? `${acc.color}20` : undefined,
                 border: acc.color ? `1px solid ${acc.color}40` : undefined,
@@ -64,7 +117,10 @@ export default function Dashboard() {
               </div>
               <div className="flex flex-col mt-auto gap-0">
                 <span className="text-xl font-bold tracking-tight text-white mb-1">
-                  {formatCurrency(acc.balance + (acc.children?.reduce((s, c) => s + c.balance, 0) || 0))}
+                  {formatCurrency(
+                    acc.balance +
+                      (acc.children?.reduce((s, c) => s + c.balance, 0) || 0),
+                  )}
                 </span>
                 {acc.children && acc.children.length > 0 && (
                   <span className="text-[10px] font-medium text-white/70 bg-white/10 px-2 py-0.5 rounded-md w-max border border-white/5">
@@ -79,6 +135,36 @@ export default function Dashboard() {
               </div>
             </div>
           ))
+        )}
+      </section>
+
+      {/* Goals Section */}
+      <section className="mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            Goals
+          </h3>
+          <GoalForm>
+            <span className="text-sm text-indigo-500 font-medium cursor-pointer hover:text-indigo-600">
+              + Tambah
+            </span>
+          </GoalForm>
+        </div>
+
+        {goals.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-8 text-center bg-zinc-50 rounded-2xl dark:bg-zinc-900/50">
+            <span className="text-4xl mb-3">🎯</span>
+            <p className="text-zinc-500 font-medium">Belum ada goal</p>
+            <p className="text-sm text-zinc-400 mt-1">
+              Buat goal untuk memotivasi diri
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {goals.map((goal) => (
+              <GoalCard key={goal.id} goal={goal} />
+            ))}
+          </div>
         )}
       </section>
 
@@ -163,6 +249,6 @@ export default function Dashboard() {
       <div className="fixed bottom-24 right-6 z-50 md:bottom-10">
         <TransactionForm />
       </div>
-    </div>
+    </PageContainer>
   );
 }

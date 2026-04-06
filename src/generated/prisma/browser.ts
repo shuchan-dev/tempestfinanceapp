@@ -52,3 +52,8 @@ export type Debt = Prisma.DebtModel
  * 
  */
 export type DebtPayment = Prisma.DebtPaymentModel
+/**
+ * Model Goal
+ * 
+ */
+export type Goal = Prisma.GoalModel

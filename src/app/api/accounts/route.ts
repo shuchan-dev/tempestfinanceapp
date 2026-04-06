@@ -10,22 +10,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getUserId } from "@/lib/session";
+import { resolveUserId } from "@/lib/api-utils";
 import type { CreateAccountPayload, ApiResponse, AccountData } from "@/types";
-
-// ─── Helper: Ambil userId dari sesi atau kembalikan error ─────
-async function resolveUserId() {
-  const userId = await getUserId();
-  if (!userId)
-    return {
-      userId: null,
-      error: NextResponse.json(
-        { success: false as const, error: "Tidak terautentikasi" },
-        { status: 401 },
-      ),
-    };
-  return { userId, error: null };
-}
+import { Prisma } from "@/generated/prisma/client";
 
 // ─── GET /api/accounts ────────────────────────────────────────
 /** Mengambil seluruh akun milik user yang sedang login. */
@@ -35,7 +22,7 @@ export async function GET(): Promise<NextResponse<ApiResponse<AccountData[]>>> {
     if (error) return error;
 
     const accounts = await db.account.findMany({
-      where: { userId: userId!, parentId: null },
+      where: { userId: userId!, parentId: null, deletedAt: null },
       include: { children: true },
       orderBy: { createdAt: "asc" },
     });
@@ -68,8 +55,16 @@ export async function POST(
       );
     }
 
+    // Validasi balance tidak boleh negatif
+    if (body.balance !== undefined && body.balance < 0) {
+      return NextResponse.json(
+        { success: false, error: "Saldo tidak boleh negatif" },
+        { status: 400 },
+      );
+    }
+
     const account = await db.$transaction(
-      async (tx: any) => {
+      async (tx: Prisma.TransactionClient) => {
         // 1. Buat akun baru yang berelasi ke userId
         const newAccount = await tx.account.create({
           data: {
@@ -137,7 +132,7 @@ export async function DELETE(
     // Pastikan akun ini milik user aktif (mencegah IDOR attack)
     const account = await db.account.findFirst({
       where: { id, userId: userId! },
-      include: { children: true }
+      include: { children: true },
     });
 
     if (!account) {
@@ -158,7 +153,11 @@ export async function DELETE(
 
     if (totalBalance !== 0 || totalBalance < 0) {
       return NextResponse.json(
-        { success: false, error: "Gagal: Total saldo akun induk dan kantong harus 0 sebelum dihapus!" },
+        {
+          success: false,
+          error:
+            "Gagal: Total saldo akun induk dan kantong harus 0 sebelum dihapus!",
+        },
         { status: 400 },
       );
     }
@@ -173,14 +172,28 @@ export async function DELETE(
       );
     }
 
-    const idsToDelete = [account.id, ...(account.children?.map((c: any) => c.id) || [])];
+    const idsToDelete = [
+      account.id,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...(account.children?.map((c: any) => c.id) || []),
+    ];
 
     await db.$transaction(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (tx: any) => {
-        await tx.transaction.deleteMany({
-          where: { OR: [{ accountId: { in: idsToDelete } }, { toAccountId: { in: idsToDelete } }] },
+        await tx.transaction.updateMany({
+          where: {
+            OR: [
+              { accountId: { in: idsToDelete } },
+              { toAccountId: { in: idsToDelete } },
+            ],
+          },
+          data: { deletedAt: new Date() },
         });
-        await tx.account.delete({ where: { id } });
+        await tx.account.updateMany({
+          where: { id: { in: idsToDelete } },
+          data: { deletedAt: new Date() },
+        });
       },
       { maxWait: 10000, timeout: 20000 },
     );

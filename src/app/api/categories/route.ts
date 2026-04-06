@@ -10,22 +10,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getUserId } from "@/lib/session";
+import { resolveUserId } from "@/lib/api-utils";
 import type { ApiResponse, CategoryData } from "@/types";
-
-async function resolveUserId() {
-  const userId = await getUserId();
-  if (!userId)
-    return {
-      userId: null,
-      error: NextResponse.json(
-        { success: false as const, error: "Tidak terautentikasi" },
-        { status: 401 },
-      ),
-    };
-  return { userId, error: null };
-}
-
 // ─── GET /api/categories ──────────────────────────────────────
 export async function GET(
   req: NextRequest,
@@ -44,6 +30,7 @@ export async function GET(
         where: {
           userId: userId!,
           parentId: null,
+          deletedAt: null,
           ...(type ? { type } : {}),
         },
         include: {
@@ -58,7 +45,7 @@ export async function GET(
 
     // Default flat list — semua kategori (parent & children)
     const categories = await db.category.findMany({
-      where: { userId: userId!, ...(type ? { type } : {}) },
+      where: { userId: userId!, deletedAt: null, ...(type ? { type } : {}) },
       orderBy: [{ parentId: "asc" }, { order: "asc" }, { name: "asc" }],
     });
 
@@ -111,6 +98,20 @@ export async function POST(
       if (parent.type !== body.type) {
         return NextResponse.json(
           { success: false, error: "Tipe sub-kategori harus sama dengan parent" },
+          { status: 400 },
+        );
+      }
+
+      // Validasi maks kedalaman (3 level: Root -> Sub -> Sub-Sub)
+      let depth = 1;
+      let p: any = parent;
+      while (p && p.parentId) {
+        depth++;
+        p = await db.category.findFirst({ where: { id: p.parentId } });
+      }
+      if (depth >= 3) {
+        return NextResponse.json(
+          { success: false, error: "Maksimal kedalaman sub-kategori adalah 3 level (Root -> Sub -> Sub-Sub)" },
           { status: 400 },
         );
       }
@@ -193,8 +194,8 @@ export async function DELETE(
           where: { categoryId: id },
           data: { categoryId: null },
         });
-        await tx.budget.deleteMany({ where: { categoryId: id } });
-        await tx.category.delete({ where: { id } });
+        await tx.budget.updateMany({ where: { categoryId: id }, data: { deletedAt: new Date() } });
+        await tx.category.update({ where: { id }, data: { deletedAt: new Date() } });
       },
       { maxWait: 10000, timeout: 20000 },
     );

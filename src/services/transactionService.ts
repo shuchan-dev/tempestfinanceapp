@@ -1,9 +1,13 @@
 import { db } from "@/lib/db";
+import type { Prisma } from "@/generated/prisma/client";
 import type { CreateTransactionPayload } from "@/types";
 
-export async function createTransaction(userId: string, body: CreateTransactionPayload) {
+export async function createTransaction(
+  userId: string,
+  body: CreateTransactionPayload,
+) {
   return await db.$transaction(
-    async (tx: any) => {
+    async (tx: Prisma.TransactionClient) => {
       // 1. Simpan data transaksi utama
       const transaction = await tx.transaction.create({
         data: {
@@ -17,11 +21,20 @@ export async function createTransaction(userId: string, body: CreateTransactionP
           categoryId: body.categoryId?.trim() ? body.categoryId : undefined,
           toAccountId: body.toAccountId?.trim() ? body.toAccountId : undefined,
           adminFee: body.adminFee ?? 0,
+          isRecurring: body.isRecurring ?? false,
+          recurrenceRule: body.recurrenceRule ?? null,
+          recurrenceEndDate: body.recurrenceEndDate
+            ? new Date(body.recurrenceEndDate)
+            : null,
         },
         include: {
-          account: { select: { id: true, name: true, icon: true, color: true } },
+          account: {
+            select: { id: true, name: true, icon: true, color: true },
+          },
           category: { select: { id: true, name: true, icon: true } },
-          toAccount: { select: { id: true, name: true, icon: true, color: true } },
+          toAccount: {
+            select: { id: true, name: true, icon: true, color: true },
+          },
         },
       });
 
@@ -41,11 +54,18 @@ export async function createTransaction(userId: string, body: CreateTransactionP
       }
 
       // 2. Update Saldo dengan logika Uang Goib
-      const account = await tx.account.findUnique({ where: { id: body.accountId } });
+      const account = await tx.account.findUnique({
+        where: { id: body.accountId },
+      });
       if (!account) throw new Error("Akun sumber tidak ditemukan");
 
       if (body.type === "INCOME") {
-        await handleIncomingFunds(tx, account.id, account.uangGoib, body.amount);
+        await handleIncomingFunds(
+          tx,
+          account.id,
+          account.uangGoib,
+          body.amount,
+        );
       } else if (body.type === "EXPENSE") {
         await handleOutgoingFunds(tx, account.id, account.balance, body.amount);
       } else if (body.type === "TRANSFER" && body.toAccountId) {
@@ -57,7 +77,12 @@ export async function createTransaction(userId: string, body: CreateTransactionP
         });
         if (!targetAccount) throw new Error("Akun tujuan tidak ditemukan");
 
-        await handleIncomingFunds(tx, targetAccount.id, targetAccount.uangGoib, body.amount);
+        await handleIncomingFunds(
+          tx,
+          targetAccount.id,
+          targetAccount.uangGoib,
+          body.amount,
+        );
       }
 
       return transaction;
@@ -68,7 +93,12 @@ export async function createTransaction(userId: string, body: CreateTransactionP
 
 // -- Helper utilities for shared account balance logic --
 
-async function handleIncomingFunds(tx: any, accountId: string, accountUangGoib: number, amount: number) {
+async function handleIncomingFunds(
+  tx: Prisma.TransactionClient,
+  accountId: string,
+  accountUangGoib: number,
+  amount: number,
+) {
   if (accountUangGoib > 0) {
     if (amount > accountUangGoib) {
       await tx.account.update({
@@ -92,7 +122,12 @@ async function handleIncomingFunds(tx: any, accountId: string, accountUangGoib: 
   }
 }
 
-async function handleOutgoingFunds(tx: any, accountId: string, currentBalance: number, amount: number) {
+async function handleOutgoingFunds(
+  tx: Prisma.TransactionClient,
+  accountId: string,
+  currentBalance: number,
+  amount: number,
+) {
   const deductible = Math.min(amount, currentBalance);
   const goibAddition = amount - deductible;
   await tx.account.update({

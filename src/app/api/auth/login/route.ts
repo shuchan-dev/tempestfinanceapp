@@ -2,8 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { signSession } from "@/lib/session-utils";
 import bcrypt from "bcryptjs";
+import {
+  withAuthRateLimit,
+  recordLoginFailure,
+  clearLoginFailure,
+} from "@/lib/auth-rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rateLimitCheck = withAuthRateLimit(req);
+  if (rateLimitCheck?.response) return rateLimitCheck.response;
+
   try {
     const { name, pin } = await req.json();
 
@@ -24,19 +32,27 @@ export async function POST(req: NextRequest) {
 
     // 2. Jika nama tidak ada di database
     if (!user) {
-      return NextResponse.json(
+      const failureCookies = recordLoginFailure();
+      const response = NextResponse.json(
         { success: false, error: "Nama tidak ditemukan di sistem." },
         { status: 404 },
       );
+      response.headers.append("Set-Cookie", failureCookies.setCookieStart);
+      response.headers.append("Set-Cookie", failureCookies.setCookieTime);
+      return response;
     }
 
     // 3. Jika nama ada, cek apakah PIN-nya cocok menggunakan bcrypt
     const isPinValid = await bcrypt.compare(pin, user.pin);
     if (!isPinValid) {
-      return NextResponse.json(
+      const failureCookies = recordLoginFailure();
+      const response = NextResponse.json(
         { success: false, error: "PIN yang Anda masukkan salah." },
         { status: 401 }, // 401 Unauthorized
       );
+      response.headers.append("Set-Cookie", failureCookies.setCookieStart);
+      response.headers.append("Set-Cookie", failureCookies.setCookieTime);
+      return response;
     }
 
     if (!user.isApproved) {
@@ -67,6 +83,12 @@ export async function POST(req: NextRequest) {
       path: "/",
     });
 
+    // Clear failed login attempt cookies on successful login
+    const clearCookies = clearLoginFailure();
+    clearCookies.forEach((cookie) =>
+      response.headers.append("Set-Cookie", cookie),
+    );
+
     return response;
   } catch (error) {
     console.error("[POST /api/auth/login] Error:", error);
@@ -76,4 +98,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

@@ -18,12 +18,50 @@ export async function GET(): Promise<NextResponse<ApiResponse<BudgetData[]>>> {
     if (error) return error;
 
     const budgets = await db.budget.findMany({
-      where: { userId: userId! },
+      where: { userId: userId!, deletedAt: null },
       include: { category: true },
       orderBy: { createdAt: "asc" },
     });
 
-    return NextResponse.json({ success: true, data: budgets as unknown as BudgetData[] });
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Calculate start of current week (Sunday)
+    const startOfWeek = new Date(now);
+    const day = now.getDay();
+    startOfWeek.setDate(now.getDate() - day);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const budgetsWithCalc = await Promise.all(
+      budgets.map(async (b) => {
+        const dateFilter =
+          b.period === "WEEKLY"
+            ? { gte: startOfWeek }
+            : { gte: firstDayOfMonth };
+
+        const transactions = await db.transaction.aggregate({
+          _sum: { amount: true },
+          where: {
+            userId: userId!,
+            categoryId: b.categoryId,
+            type: "EXPENSE",
+            date: dateFilter,
+          },
+        });
+        const spent = transactions._sum.amount ?? 0;
+        return {
+          ...b,
+          spent,
+          remaining: b.amount - spent,
+          percentage: Math.min(100, Math.round((spent / b.amount) * 100)),
+        };
+      }),
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: budgetsWithCalc as unknown as BudgetData[],
+    });
   } catch (error) {
     console.error("[GET /api/budgets] Error:", error);
     return NextResponse.json(
@@ -117,7 +155,9 @@ export async function DELETE(
       );
     }
 
-    const budget = await db.budget.findFirst({ where: { id, userId: userId! } });
+    const budget = await db.budget.findFirst({
+      where: { id, userId: userId! },
+    });
     if (!budget) {
       return NextResponse.json(
         { success: false, error: "Budget tidak ditemukan" },
@@ -125,7 +165,7 @@ export async function DELETE(
       );
     }
 
-    await db.budget.delete({ where: { id } });
+    await db.budget.update({ where: { id }, data: { deletedAt: new Date() } });
     return NextResponse.json({ success: true, data: true });
   } catch (error) {
     console.error("[DELETE /api/budgets] Error:", error);

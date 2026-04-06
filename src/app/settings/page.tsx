@@ -1,14 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { toast } from "sonner";
-import { Settings, Plus, Wallet, Loader2, Tags, Trash2, LogOut } from "lucide-react";
+import {
+  Settings,
+  Plus,
+  Wallet,
+  Loader2,
+  Tags,
+  Trash2,
+  LogOut,
+  Moon,
+  Sun,
+} from "lucide-react";
 
 import { cn, formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageContainer } from "@/components/page-container";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -27,28 +38,55 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { data: accountsRes, isLoading, mutate } = useSWR<{ data: AccountData[] }>("/api/accounts", fetcher);
+  const {
+    data: accountsRes,
+    isLoading,
+    mutate,
+  } = useSWR<{ data: AccountData[] }>("/api/accounts", fetcher);
   const accounts = accountsRes?.data || [];
 
-  const { data: categoriesRes, isLoading: catLoading, mutate: mutateCat } = useSWR<{ data: CategoryData[] }>("/api/categories?nested=true", fetcher);
+  const {
+    data: categoriesRes,
+    isLoading: catLoading,
+    mutate: mutateCat,
+  } = useSWR<{ data: CategoryData[] }>("/api/categories?nested=true", fetcher);
   const categories = categoriesRes?.data || [];
 
   // State for Accounts
   const [isAddingAccount, setIsAddingAccount] = useState(false);
   const [newAccountName, setNewAccountName] = useState("");
   const [newAccountBalance, setNewAccountBalance] = useState("");
-  const [newAccountParentId, setNewAccountParentId] = useState<string | undefined>(undefined);
-  
+  const [newAccountParentId, setNewAccountParentId] = useState<
+    string | undefined
+  >(undefined);
+
   // State for Categories
   const [isAddingCat, setIsAddingCat] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [newCatType, setNewCatType] = useState<TransactionType>("EXPENSE");
-  const [newCatParentId, setNewCatParentId] = useState<string | undefined>(undefined);
+  const [newCatParentId, setNewCatParentId] = useState<string | undefined>(
+    undefined,
+  );
+
+  // State for Dark Mode
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const [isSubmittingAccount, setIsSubmittingAccount] = useState(false);
   const [isSubmittingCat, setIsSubmittingCat] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
+
+  // Initialize dark mode from localStorage
+  useEffect(() => {
+    setMounted(true);
+    const savedTheme = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    const shouldBeDark = savedTheme ? savedTheme === "dark" : prefersDark;
+    setIsDarkMode(shouldBeDark);
+  }, []);
 
   const handleBalanceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/[^0-9]/g, "");
@@ -74,7 +112,8 @@ export default function SettingsPage() {
     }
 
     setIsSubmittingAccount(true);
-    const numericBalance = Number(newAccountBalance.replace(/[^0-9]/g, "")) || 0;
+    const numericBalance =
+      Number(newAccountBalance.replace(/[^0-9]/g, "")) || 0;
 
     try {
       const res = await fetch("/api/accounts", {
@@ -202,8 +241,20 @@ export default function SettingsPage() {
     }
   };
 
+  const handleToggleDarkMode = () => {
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    localStorage.setItem("theme", newDarkMode ? "dark" : "light");
+
+    if (newDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-6 p-6 pt-10 pb-32 min-h-screen">
+    <PageContainer className="min-h-screen">
       <header className="space-y-2 sticky top-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md pb-4 z-10 -mx-6 px-6 pt-4 border-b border-zinc-100 dark:border-zinc-800">
         <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
           <Settings className="w-6 h-6 text-emerald-500" />
@@ -222,10 +273,14 @@ export default function SettingsPage() {
             Daftar Akun Anda
           </h2>
           {!isAddingAccount && (
-            <Button size="sm" onClick={() => {
-              setNewAccountParentId(undefined);
-              setIsAddingAccount(true);
-            }} className="rounded-full bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
+            <Button
+              size="sm"
+              onClick={() => {
+                setNewAccountParentId(undefined);
+                setIsAddingAccount(true);
+              }}
+              className="rounded-full bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+            >
               <Plus className="w-4 h-4 mr-1" />
               Akun Baru
             </Button>
@@ -234,26 +289,34 @@ export default function SettingsPage() {
 
         {/* Input Akun Baru */}
         {isAddingAccount && (
-          <form 
-            onSubmit={handleAddAccount} 
-            className={cn("bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-blue-200 dark:border-blue-900/50 shadow-sm space-y-4 relative overflow-hidden", shake && "animate-shake")}
+          <form
+            onSubmit={handleAddAccount}
+            className={cn(
+              "bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-blue-200 dark:border-blue-900/50 shadow-sm space-y-4 relative overflow-hidden",
+              shake && "animate-shake",
+            )}
           >
             <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
             <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
               {newAccountParentId ? "Tambah Kantong Akun" : "Tambah Akun Baru"}
             </h3>
-            
+
             <div className="space-y-3">
               {newAccountParentId && (
                 <div className="text-xs text-zinc-500 border border-zinc-200 dark:border-zinc-800 rounded-md p-2 bg-zinc-50 dark:bg-zinc-900">
-                  Kantong untuk: <strong>{accounts.find(a => a.id === newAccountParentId)?.name}</strong>
+                  Kantong untuk:{" "}
+                  <strong>
+                    {accounts.find((a) => a.id === newAccountParentId)?.name}
+                  </strong>
                 </div>
               )}
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-zinc-500 uppercase">Nama Akun</label>
-                <Input 
+                <label className="text-xs font-semibold text-zinc-500 uppercase">
+                  Nama Akun
+                </label>
+                <Input
                   autoFocus
-                  placeholder="BCA, GoPay, Tunai..." 
+                  placeholder="BCA, GoPay, Tunai..."
                   value={newAccountName}
                   onChange={(e) => setNewAccountName(e.target.value)}
                   className="rounded-xl border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950"
@@ -262,11 +325,15 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-zinc-500 uppercase">Saldo Awal (Opsional)</label>
+                <label className="text-xs font-semibold text-zinc-500 uppercase">
+                  Saldo Awal (Opsional)
+                </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-medium">Rp</span>
-                  <Input 
-                    placeholder="0" 
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-medium">
+                    Rp
+                  </span>
+                  <Input
+                    placeholder="0"
                     value={newAccountBalance}
                     onChange={handleBalanceChange}
                     inputMode="numeric"
@@ -278,9 +345,9 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 className="flex-1 rounded-xl border-zinc-200"
                 onClick={() => {
                   setIsAddingAccount(false);
@@ -290,12 +357,16 @@ export default function SettingsPage() {
               >
                 Batal
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="flex-1 rounded-xl bg-blue-500 hover:bg-blue-600 text-white"
                 disabled={isSubmittingAccount}
               >
-                {isSubmittingAccount ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan"}
+                {isSubmittingAccount ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Simpan"
+                )}
               </Button>
             </div>
           </form>
@@ -304,25 +375,34 @@ export default function SettingsPage() {
         {/* List Akun */}
         <div className="flex flex-col gap-3">
           {isLoading ? (
-            [...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)
+            [...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+            ))
           ) : accounts.length === 0 ? (
             <div className="text-center py-8 text-zinc-500 text-sm bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
               Belum ada akun, silakan tambahkan.
             </div>
           ) : (
             accounts.map((acc) => (
-              <div key={acc.id} className="flex flex-col p-4 rounded-2xl bg-white shadow-sm border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 gap-3">
+              <div
+                key={acc.id}
+                className="flex flex-col p-4 rounded-2xl bg-white shadow-sm border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 gap-3"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 min-w-10 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-lg">
                       {acc.icon || "💳"}
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-zinc-900 dark:text-zinc-100">{acc.name}</span>
-                      <span className="text-xs text-zinc-500">Saldo Utama: {formatCurrency(acc.balance)}</span>
+                      <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                        {acc.name}
+                      </span>
+                      <span className="text-xs text-zinc-500">
+                        Saldo Utama: {formatCurrency(acc.balance)}
+                      </span>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
@@ -337,27 +417,37 @@ export default function SettingsPage() {
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           disabled={deletingId === acc.id}
                           className="text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                           title="Hapus Akun"
                         >
-                          {deletingId === acc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                          {deletingId === acc.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent className="w-[90vw] max-w-md rounded-2xl">
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Hapus Akun {acc.name}?</AlertDialogTitle>
+                          <AlertDialogTitle>
+                            Hapus Akun {acc.name}?
+                          </AlertDialogTitle>
                           <AlertDialogDescription>
-                            Tindakan ini tidak dapat dibatalkan. Menghapus akun ini juga akan 
-                            menghapus catatan transaksi yang terkait dengannya dan seluruh kantong yang bernaung. Total saldo akun + kantong harus Rp 0.
+                            Tindakan ini tidak dapat dibatalkan. Menghapus akun
+                            ini juga akan menghapus catatan transaksi yang
+                            terkait dengannya dan seluruh kantong yang bernaung.
+                            Total saldo akun + kantong harus Rp 0.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
-                          <AlertDialogAction 
+                          <AlertDialogCancel className="rounded-xl">
+                            Batal
+                          </AlertDialogCancel>
+                          <AlertDialogAction
                             onClick={() => handleDeleteAccount(acc.id)}
                             className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
                           >
@@ -372,36 +462,54 @@ export default function SettingsPage() {
                 {acc.children && acc.children.length > 0 && (
                   <div className="ml-6 flex flex-col gap-2 border-l-2 border-zinc-100 dark:border-zinc-800 pl-4 py-1 mt-1">
                     {acc.children.map((child) => (
-                      <div key={child.id} className="flex items-center justify-between p-2 rounded-lg bg-zinc-50 dark:bg-zinc-950/50">
+                      <div
+                        key={child.id}
+                        className="flex items-center justify-between p-2 rounded-lg bg-zinc-50 dark:bg-zinc-950/50"
+                      >
                         <div className="flex items-center gap-3">
-                          <div className="text-lg w-6 text-center">{child.icon || "👛"}</div>
+                          <div className="text-lg w-6 text-center">
+                            {child.icon || "👛"}
+                          </div>
                           <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{child.name}</span>
-                            <span className="text-xs text-zinc-500">{formatCurrency(child.balance)}</span>
+                            <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                              {child.name}
+                            </span>
+                            <span className="text-xs text-zinc-500">
+                              {formatCurrency(child.balance)}
+                            </span>
                           </div>
                         </div>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               disabled={deletingId === child.id}
                               className="h-8 w-8 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                               title="Hapus Kantong"
                             >
-                              {deletingId === child.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                              {deletingId === child.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent className="w-[90vw] max-w-md rounded-2xl">
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Hapus Kantong {child.name}?</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                Hapus Kantong {child.name}?
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Anda yakin ingin menghapus kantong ini? Pastikan saldo = 0.
+                                Anda yakin ingin menghapus kantong ini? Pastikan
+                                saldo = 0.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
-                              <AlertDialogAction 
+                              <AlertDialogCancel className="rounded-xl">
+                                Batal
+                              </AlertDialogCancel>
+                              <AlertDialogAction
                                 onClick={() => handleDeleteAccount(child.id)}
                                 className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
                               >
@@ -428,10 +536,14 @@ export default function SettingsPage() {
             Manajemen Kategori
           </h2>
           {!isAddingCat && (
-            <Button size="sm" onClick={() => {
-              setNewCatParentId(undefined);
-              setIsAddingCat(true);
-            }} className="rounded-full bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
+            <Button
+              size="sm"
+              onClick={() => {
+                setNewCatParentId(undefined);
+                setIsAddingCat(true);
+              }}
+              className="rounded-full bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+            >
               <Plus className="w-4 h-4 mr-1" />
               Kategori Baru
             </Button>
@@ -440,48 +552,56 @@ export default function SettingsPage() {
 
         {/* Input Kategori Baru */}
         {isAddingCat && (
-          <form 
-            onSubmit={handleAddCategory} 
-            className={cn("bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/50 shadow-sm space-y-4 relative overflow-hidden", shake && "animate-shake")}
+          <form
+            onSubmit={handleAddCategory}
+            className={cn(
+              "bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/50 shadow-sm space-y-4 relative overflow-hidden",
+              shake && "animate-shake",
+            )}
           >
             <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
             <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
               {newCatParentId ? "Tambah Sub-Kategori" : "Tambah Kategori Baru"}
             </h3>
-            
+
             <div className="space-y-3">
               {!newCatParentId && (
-              <div className="flex rounded-lg bg-zinc-100 p-1 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
-                {(["EXPENSE", "INCOME"] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setNewCatType(t)}
-                    className={cn(
-                      "flex-1 rounded-md py-1.5 text-xs font-semibold uppercase tracking-wider transition-all",
-                      newCatType === t
-                        ? t === "EXPENSE"
-                          ? "bg-red-500 text-white shadow-sm"
-                          : "bg-emerald-500 text-white shadow-sm"
-                        : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
-                    )}
-                  >
-                    {t === "EXPENSE" ? "Pengembalian Keluar" : "Pemasukan"}
-                  </button>
-                ))}
-              </div>
+                <div className="flex rounded-lg bg-zinc-100 p-1 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                  {(["EXPENSE", "INCOME"] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setNewCatType(t)}
+                      className={cn(
+                        "flex-1 rounded-md py-1.5 text-xs font-semibold uppercase tracking-wider transition-all",
+                        newCatType === t
+                          ? t === "EXPENSE"
+                            ? "bg-red-500 text-white shadow-sm"
+                            : "bg-emerald-500 text-white shadow-sm"
+                          : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300",
+                      )}
+                    >
+                      {t === "EXPENSE" ? "Pengembalian Keluar" : "Pemasukan"}
+                    </button>
+                  ))}
+                </div>
               )}
               {newCatParentId && (
                 <div className="text-xs text-zinc-500 border border-zinc-200 dark:border-zinc-800 rounded-md p-2 bg-zinc-50 dark:bg-zinc-900">
-                  Sub-kategori untuk: <strong>{categories.find(c => c.id === newCatParentId)?.name}</strong>
+                  Sub-kategori untuk:{" "}
+                  <strong>
+                    {categories.find((c) => c.id === newCatParentId)?.name}
+                  </strong>
                 </div>
               )}
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-zinc-500 uppercase">Nama Kategori</label>
-                <Input 
+                <label className="text-xs font-semibold text-zinc-500 uppercase">
+                  Nama Kategori
+                </label>
+                <Input
                   autoFocus
-                  placeholder="Bahan Pokok, Gaji, Hadiah..." 
+                  placeholder="Bahan Pokok, Gaji, Hadiah..."
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
                   className="rounded-xl border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950"
@@ -491,9 +611,9 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 className="flex-1 rounded-xl border-zinc-200"
                 onClick={() => {
                   setIsAddingCat(false);
@@ -503,12 +623,16 @@ export default function SettingsPage() {
               >
                 Batal
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white"
                 disabled={isSubmittingCat}
               >
-                {isSubmittingCat ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan"}
+                {isSubmittingCat ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Simpan"
+                )}
               </Button>
             </div>
           </form>
@@ -517,22 +641,36 @@ export default function SettingsPage() {
         {/* List Kategori */}
         <div className="flex flex-col gap-4">
           {catLoading ? (
-            [...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)
+            [...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-2xl" />
+            ))
           ) : categories.length === 0 ? (
             <div className="text-center py-8 text-zinc-500 text-sm bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
               Belum ada kategori.
             </div>
           ) : (
             categories.map((cat) => (
-              <div key={cat.id} className="flex flex-col p-4 rounded-xl bg-white shadow-sm border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 gap-3">
+              <div
+                key={cat.id}
+                className="flex flex-col p-4 rounded-xl bg-white shadow-sm border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 gap-3"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg text-sm", cat.type === "EXPENSE" ? "bg-red-50 text-red-500 dark:bg-red-950/30" : "bg-emerald-50 text-emerald-500 dark:bg-emerald-950/30")}>
+                    <div
+                      className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-lg text-sm",
+                        cat.type === "EXPENSE"
+                          ? "bg-red-50 text-red-500 dark:bg-red-950/30"
+                          : "bg-emerald-50 text-emerald-500 dark:bg-emerald-950/30",
+                      )}
+                    >
                       {cat.icon || (cat.type === "EXPENSE" ? "📉" : "📈")}
                     </div>
-                    <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">{cat.name}</span>
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
+                      {cat.name}
+                    </span>
                   </div>
-                  
+
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
@@ -548,27 +686,36 @@ export default function SettingsPage() {
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           disabled={deletingId === cat.id}
                           className="h-8 w-8 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                         >
-                          {deletingId === cat.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                          {deletingId === cat.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent className="w-[90vw] max-w-md rounded-2xl">
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Hapus Kategori {cat.name}?</AlertDialogTitle>
+                          <AlertDialogTitle>
+                            Hapus Kategori {cat.name}?
+                          </AlertDialogTitle>
                           <AlertDialogDescription>
-                            Anda yakin ingin menghapus kategori ini? Jika ini adalah Parent, 
-                            pastikan semua sub-kategori di dalamnya sudah dihapus terlebih dahulu.
-                            Transaksi lama tidak akan terhapus.
+                            Anda yakin ingin menghapus kategori ini? Jika ini
+                            adalah Parent, pastikan semua sub-kategori di
+                            dalamnya sudah dihapus terlebih dahulu. Transaksi
+                            lama tidak akan terhapus.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
-                          <AlertDialogAction 
+                          <AlertDialogCancel className="rounded-xl">
+                            Batal
+                          </AlertDialogCancel>
+                          <AlertDialogAction
                             onClick={() => handleDeleteCategory(cat.id)}
                             className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
                           >
@@ -583,32 +730,49 @@ export default function SettingsPage() {
                 {cat.children && cat.children.length > 0 && (
                   <div className="ml-5 flex flex-col gap-2 border-l-2 border-zinc-100 dark:border-zinc-800 pl-4 py-1">
                     {cat.children.map((child) => (
-                      <div key={child.id} className="flex items-center justify-between p-2 rounded-lg bg-zinc-50 dark:bg-zinc-950/50">
+                      <div
+                        key={child.id}
+                        className="flex items-center justify-between p-2 rounded-lg bg-zinc-50 dark:bg-zinc-950/50"
+                      >
                         <div className="flex items-center gap-2">
-                           <div className="text-xs w-5 text-center">{child.icon || (cat.type === "EXPENSE" ? "📉" : "📈")}</div>
-                           <span className="text-sm text-zinc-600 dark:text-zinc-300 font-medium">{child.name}</span>
+                          <div className="text-xs w-5 text-center">
+                            {child.icon ||
+                              (cat.type === "EXPENSE" ? "📉" : "📈")}
+                          </div>
+                          <span className="text-sm text-zinc-600 dark:text-zinc-300 font-medium">
+                            {child.name}
+                          </span>
                         </div>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               disabled={deletingId === child.id}
                               className="h-6 w-6 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                             >
-                              {deletingId === child.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                              {deletingId === child.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-3 w-3" />
+                              )}
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent className="w-[90vw] max-w-md rounded-2xl">
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Hapus Sub-Kategori {child.name}?</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                Hapus Sub-Kategori {child.name}?
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Anda yakin ingin menghapus sub-kategori ini? Transaksi lama tidak akan terhapus.
+                                Anda yakin ingin menghapus sub-kategori ini?
+                                Transaksi lama tidak akan terhapus.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
-                              <AlertDialogAction 
+                              <AlertDialogCancel className="rounded-xl">
+                                Batal
+                              </AlertDialogCancel>
+                              <AlertDialogAction
                                 onClick={() => handleDeleteCategory(child.id)}
                                 className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
                               >
@@ -626,27 +790,86 @@ export default function SettingsPage() {
           )}
         </div>
       </section>
-      {/* Tambahan pengaturan lain nanti (Google Sheets dll) akan di sini */}
+
+      {/* Pengaturan Tampilan */}
+      <section className="space-y-4 mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+            {isDarkMode ? (
+              <Moon className="w-5 h-5 text-indigo-500" />
+            ) : (
+              <Sun className="w-5 h-5 text-amber-500" />
+            )}
+            Tampilan
+          </h2>
+          <p className="text-sm text-zinc-500 mb-4">
+            Sesuaikan pengalaman visual aplikasi Anda.
+          </p>
+
+          {/* Dark Mode Toggle */}
+          {mounted && (
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+              <div className="flex items-center gap-3">
+                {isDarkMode ? (
+                  <Moon className="w-5 h-5 text-indigo-500" />
+                ) : (
+                  <Sun className="w-5 h-5 text-amber-500" />
+                )}
+                <div className="flex flex-col">
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                    Mode Gelap
+                  </span>
+                  <span className="text-xs text-zinc-500">
+                    {isDarkMode ? "Sedang aktif" : "Nonaktif"}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={handleToggleDarkMode}
+                className={cn(
+                  "relative inline-flex h-8 w-14 items-center rounded-full transition-colors",
+                  isDarkMode
+                    ? "bg-indigo-600 dark:bg-indigo-500"
+                    : "bg-zinc-300 dark:bg-zinc-700",
+                )}
+              >
+                <span
+                  className={cn(
+                    "inline-block h-6 w-6 transform rounded-full bg-white transition-transform",
+                    isDarkMode ? "translate-x-7" : "translate-x-1",
+                  )}
+                />
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Akun Pengguna / Logout */}
       <section className="space-y-4 mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
         <div className="flex flex-col gap-2">
-           <h2 className="text-lg font-bold tracking-tight text-red-500 dark:text-red-400 flex items-center gap-2">
+          <h2 className="text-lg font-bold tracking-tight text-red-500 dark:text-red-400 flex items-center gap-2">
             <LogOut className="w-5 h-5" />
             Akses Aplikasi
           </h2>
-          <p className="text-sm text-zinc-500 mb-2">Mengeluarkan sesi Anda dari perangkat ini.</p>
-          <Button 
-            onClick={handleLogout} 
+          <p className="text-sm text-zinc-500 mb-2">
+            Mengeluarkan sesi Anda dari perangkat ini.
+          </p>
+          <Button
+            onClick={handleLogout}
             disabled={isSubmittingAccount}
-            variant="destructive" 
+            variant="destructive"
             className="w-full sm:w-auto self-start rounded-xl font-semibold shadow-sm"
           >
-            {isSubmittingAccount ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LogOut className="h-4 w-4 mr-2" />}
+            {isSubmittingAccount ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <LogOut className="h-4 w-4 mr-2" />
+            )}
             Keluar (Logout)
           </Button>
         </div>
       </section>
-    </div>
+    </PageContainer>
   );
 }

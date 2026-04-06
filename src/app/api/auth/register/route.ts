@@ -1,16 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import bcrypt from "bcryptjs"; // Pastikan sudah install bcryptjs
+import bcrypt from "bcryptjs";
+import {
+  withAuthRateLimit,
+  recordLoginFailure,
+  clearLoginFailure,
+} from "@/lib/auth-rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rateLimitCheck = withAuthRateLimit(req);
+  if (rateLimitCheck?.response) return rateLimitCheck.response;
+
   try {
     const { name, pin } = await req.json();
 
     if (!name || !pin || pin.length !== 6 || !/^\d+$/.test(pin)) {
-      return NextResponse.json(
+      const failureCookies = recordLoginFailure();
+      const response = NextResponse.json(
         { success: false, error: "Nama dan PIN 6 digit angka wajib diisi" },
         { status: 400 },
       );
+      response.headers.append("Set-Cookie", failureCookies.setCookieStart);
+      response.headers.append("Set-Cookie", failureCookies.setCookieTime);
+      return response;
     }
 
     // Gunakan findFirst karena 'name' bukan @unique di schema
@@ -23,13 +35,17 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingUser) {
-      return NextResponse.json(
+      const failureCookies = recordLoginFailure();
+      const response = NextResponse.json(
         {
           success: false,
           error: "Nama ini sudah terdaftar. Silakan gunakan nama lain.",
         },
         { status: 400 },
       );
+      response.headers.append("Set-Cookie", failureCookies.setCookieStart);
+      response.headers.append("Set-Cookie", failureCookies.setCookieTime);
+      return response;
     }
 
     // Hash PIN sebelum disimpan
@@ -44,13 +60,21 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: true,
         message: "Pendaftaran berhasil. Tunggu persetujuan admin.",
       },
       { status: 201 },
     );
+
+    // Clear failed attempt cookies on successful registration
+    const clearCookies = clearLoginFailure();
+    clearCookies.forEach((cookie) =>
+      response.headers.append("Set-Cookie", cookie),
+    );
+
+    return response;
   } catch (error) {
     console.error("[POST /api/auth/register] Error:", error);
     return NextResponse.json(

@@ -70,7 +70,10 @@ export async function GET(): Promise<NextResponse<ApiResponse<AnalyticsData>>> {
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      cashflow.push({ month: key, ...(monthlyMap.get(key) ?? { income: 0, expense: 0 }) });
+      cashflow.push({
+        month: key,
+        ...(monthlyMap.get(key) ?? { income: 0, expense: 0 }),
+      });
     }
 
     // ── 3. Budget Progress ───────────────────────────────────
@@ -114,6 +117,75 @@ export async function GET(): Promise<NextResponse<ApiResponse<AnalyticsData>>> {
       };
     });
 
+    // ── 4. Category Spending Breakdown ───────────────────────
+    // Get all expense transactions grouped by category for this month
+    const allTransactionsThisMonth = await db.transaction.findMany({
+      where: {
+        userId,
+        type: "EXPENSE",
+        date: { gte: startOfMonth },
+        deletedAt: null,
+      },
+      include: { category: true },
+    });
+
+    const categoryMap = new Map<
+      string,
+      { name: string; icon?: string | null; amount: number }
+    >();
+    for (const tx of allTransactionsThisMonth) {
+      const catId = tx.categoryId || "uncategorized";
+      const catName = tx.category?.name || "Uncategorized";
+      const catIcon = tx.category?.icon;
+      const existing = categoryMap.get(catId) ?? {
+        name: catName,
+        icon: catIcon,
+        amount: 0,
+      };
+      existing.amount += tx.amount;
+      categoryMap.set(catId, existing);
+    }
+
+    // Calculate percentages and create category spending array
+    const categorySpending = Array.from(categoryMap.entries()).map(
+      ([catId, data]) => {
+        const budget = budgets.find((b) => b.categoryId === catId);
+        const percentage = budget ? (data.amount / budget.amount) * 100 : 0;
+        return {
+          categoryId: catId,
+          categoryName: data.name,
+          categoryIcon: data.icon,
+          spent: data.amount,
+          budget: budget?.amount,
+          percentage: Math.round(percentage),
+        };
+      },
+    );
+
+    // Sort by spent amount descending
+    categorySpending.sort((a, b) => b.spent - a.spent);
+
+    // ── 5. Top Merchants (Top Descriptions) ──────────────────
+    const merchantMap = new Map<string, { amount: number; count: number }>();
+    for (const tx of allTransactionsThisMonth) {
+      if (tx.description && tx.description.trim()) {
+        const desc = tx.description.trim();
+        const existing = merchantMap.get(desc) ?? { amount: 0, count: 0 };
+        existing.amount += tx.amount;
+        existing.count += 1;
+        merchantMap.set(desc, existing);
+      }
+    }
+
+    const topMerchants = Array.from(merchantMap.entries())
+      .map(([desc, data]) => ({
+        description: desc,
+        amount: data.amount,
+        count: data.count,
+      }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 10); // Top 10 merchants
+
     return NextResponse.json({
       success: true,
       data: {
@@ -123,6 +195,8 @@ export async function GET(): Promise<NextResponse<ApiResponse<AnalyticsData>>> {
         netFlowThisMonth,
         cashflow,
         budgetProgress,
+        categorySpending,
+        topMerchants,
       },
     });
   } catch (error) {

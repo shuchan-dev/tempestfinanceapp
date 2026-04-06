@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { logger } from "@/lib/logger";
 
 export function proxy(request: NextRequest) {
   const sessionToken = request.cookies.get("tempest_session")?.value;
@@ -28,6 +29,12 @@ export function proxy(request: NextRequest) {
     // Redirect authenticated users away from login/register
     return NextResponse.redirect(new URL("/", request.url));
   }
+
+  // Log setiap request
+  logger.info(`${request.method} ${request.nextUrl.pathname}`, {
+    method: request.method,
+    path: request.nextUrl.pathname,
+  });
 
   return NextResponse.next();
 }

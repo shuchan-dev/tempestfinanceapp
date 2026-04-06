@@ -57,7 +57,8 @@ export const ModelName = {
   Transaction: 'Transaction',
   Budget: 'Budget',
   Debt: 'Debt',
-  DebtPayment: 'DebtPayment'
+  DebtPayment: 'DebtPayment',
+  Goal: 'Goal'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -78,7 +79,8 @@ export const UserScalarFieldEnum = {
   name: 'name',
   pin: 'pin',
   isApproved: 'isApproved',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  deletedAt: 'deletedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -93,6 +95,7 @@ export const AccountScalarFieldEnum = {
   color: 'color',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt',
   parentId: 'parentId',
   userId: 'userId'
 } as const
@@ -106,6 +109,7 @@ export const CategoryScalarFieldEnum = {
   type: 'type',
   icon: 'icon',
   order: 'order',
+  deletedAt: 'deletedAt',
   parentId: 'parentId',
   userId: 'userId'
 } as const
@@ -120,12 +124,18 @@ export const TransactionScalarFieldEnum = {
   description: 'description',
   date: 'date',
   createdAt: 'createdAt',
+  deletedAt: 'deletedAt',
   isSynced: 'isSynced',
   userId: 'userId',
   accountId: 'accountId',
   categoryId: 'categoryId',
   toAccountId: 'toAccountId',
-  adminFee: 'adminFee'
+  adminFee: 'adminFee',
+  isRecurring: 'isRecurring',
+  recurrenceRule: 'recurrenceRule',
+  recurrenceEndDate: 'recurrenceEndDate',
+  recurrenceParentId: 'recurrenceParentId',
+  isRecurringInstance: 'isRecurringInstance'
 } as const
 
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
@@ -138,7 +148,8 @@ export const BudgetScalarFieldEnum = {
   categoryId: 'categoryId',
   userId: 'userId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
 } as const
 
 export type BudgetScalarFieldEnum = (typeof BudgetScalarFieldEnum)[keyof typeof BudgetScalarFieldEnum]
@@ -155,7 +166,8 @@ export const DebtScalarFieldEnum = {
   paidAt: 'paidAt',
   userId: 'userId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
 } as const
 
 export type DebtScalarFieldEnum = (typeof DebtScalarFieldEnum)[keyof typeof DebtScalarFieldEnum]
@@ -168,10 +180,29 @@ export const DebtPaymentScalarFieldEnum = {
   debtId: 'debtId',
   userId: 'userId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
 } as const
 
 export type DebtPaymentScalarFieldEnum = (typeof DebtPaymentScalarFieldEnum)[keyof typeof DebtPaymentScalarFieldEnum]
+
+
+export const GoalScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  targetAmount: 'targetAmount',
+  currentAmount: 'currentAmount',
+  targetDate: 'targetDate',
+  icon: 'icon',
+  color: 'color',
+  accountId: 'accountId',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+} as const
+
+export type GoalScalarFieldEnum = (typeof GoalScalarFieldEnum)[keyof typeof GoalScalarFieldEnum]
 
 
 export const SortOrder = {

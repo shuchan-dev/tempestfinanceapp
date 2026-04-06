@@ -113,8 +113,8 @@ export async function DELETE(req: NextRequest): Promise<NextResponse<ApiResponse
       );
     }
 
-    // Hapus pembayaran
-    await db.debtPayment.delete({ where: { id } });
+    // Hapus pembayaran (soft delete)
+    await db.debtPayment.update({ where: { id }, data: { deletedAt: new Date() } });
 
     // Jika tadinya lunas, cek apakah skrg jadi belum lunas (kurang dari amount)
     if (payment.debt.isPaid) {

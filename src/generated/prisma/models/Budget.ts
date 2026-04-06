@@ -42,6 +42,7 @@ export type BudgetMinAggregateOutputType = {
   userId: string | null
   createdAt: Date | null
   updatedAt: Date | null
+  deletedAt: Date | null
 }
 
 export type BudgetMaxAggregateOutputType = {
@@ -52,6 +53,7 @@ export type BudgetMaxAggregateOutputType = {
   userId: string | null
   createdAt: Date | null
   updatedAt: Date | null
+  deletedAt: Date | null
 }
 
 export type BudgetCountAggregateOutputType = {
@@ -62,6 +64,7 @@ export type BudgetCountAggregateOutputType = {
   userId: number
   createdAt: number
   updatedAt: number
+  deletedAt: number
   _all: number
 }
 
@@ -82,6 +85,7 @@ export type BudgetMinAggregateInputType = {
   userId?: true
   createdAt?: true
   updatedAt?: true
+  deletedAt?: true
 }
 
 export type BudgetMaxAggregateInputType = {
@@ -92,6 +96,7 @@ export type BudgetMaxAggregateInputType = {
   userId?: true
   createdAt?: true
   updatedAt?: true
+  deletedAt?: true
 }
 
 export type BudgetCountAggregateInputType = {
@@ -102,6 +107,7 @@ export type BudgetCountAggregateInputType = {
   userId?: true
   createdAt?: true
   updatedAt?: true
+  deletedAt?: true
   _all?: true
 }
 
@@ -199,6 +205,7 @@ export type BudgetGroupByOutputType = {
   userId: string
   createdAt: Date
   updatedAt: Date
+  deletedAt: Date | null
   _count: BudgetCountAggregateOutputType | null
   _avg: BudgetAvgAggregateOutputType | null
   _sum: BudgetSumAggregateOutputType | null
@@ -232,6 +239,7 @@ export type BudgetWhereInput = {
   userId?: Prisma.StringFilter<"Budget"> | string
   createdAt?: Prisma.DateTimeFilter<"Budget"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Budget"> | Date | string
+  deletedAt?: Prisma.DateTimeNullableFilter<"Budget"> | Date | string | null
   category?: Prisma.XOR<Prisma.CategoryScalarRelationFilter, Prisma.CategoryWhereInput>
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
@@ -244,6 +252,7 @@ export type BudgetOrderByWithRelationInput = {
   userId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   category?: Prisma.CategoryOrderByWithRelationInput
   user?: Prisma.UserOrderByWithRelationInput
 }
@@ -260,6 +269,7 @@ export type BudgetWhereUniqueInput = Prisma.AtLeast<{
   userId?: Prisma.StringFilter<"Budget"> | string
   createdAt?: Prisma.DateTimeFilter<"Budget"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Budget"> | Date | string
+  deletedAt?: Prisma.DateTimeNullableFilter<"Budget"> | Date | string | null
   category?: Prisma.XOR<Prisma.CategoryScalarRelationFilter, Prisma.CategoryWhereInput>
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id" | "userId_categoryId_period">
@@ -272,6 +282,7 @@ export type BudgetOrderByWithAggregationInput = {
   userId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.BudgetCountOrderByAggregateInput
   _avg?: Prisma.BudgetAvgOrderByAggregateInput
   _max?: Prisma.BudgetMaxOrderByAggregateInput
@@ -290,6 +301,7 @@ export type BudgetScalarWhereWithAggregatesInput = {
   userId?: Prisma.StringWithAggregatesFilter<"Budget"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Budget"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Budget"> | Date | string
+  deletedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Budget"> | Date | string | null
 }
 
 export type BudgetCreateInput = {
@@ -298,6 +310,7 @@ export type BudgetCreateInput = {
   period?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  deletedAt?: Date | string | null
   category: Prisma.CategoryCreateNestedOneWithoutBudgetsInput
   user: Prisma.UserCreateNestedOneWithoutBudgetsInput
 }
@@ -310,6 +323,7 @@ export type BudgetUncheckedCreateInput = {
   userId: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  deletedAt?: Date | string | null
 }
 
 export type BudgetUpdateInput = {
@@ -318,6 +332,7 @@ export type BudgetUpdateInput = {
   period?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   category?: Prisma.CategoryUpdateOneRequiredWithoutBudgetsNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutBudgetsNestedInput
 }
@@ -330,6 +345,7 @@ export type BudgetUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type BudgetCreateManyInput = {
@@ -340,6 +356,7 @@ export type BudgetCreateManyInput = {
   userId: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  deletedAt?: Date | string | null
 }
 
 export type BudgetUpdateManyMutationInput = {
@@ -348,6 +365,7 @@ export type BudgetUpdateManyMutationInput = {
   period?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type BudgetUncheckedUpdateManyInput = {
@@ -358,6 +376,7 @@ export type BudgetUncheckedUpdateManyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type BudgetListRelationFilter = {
@@ -384,6 +403,7 @@ export type BudgetCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
 }
 
 export type BudgetAvgOrderByAggregateInput = {
@@ -398,6 +418,7 @@ export type BudgetMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
 }
 
 export type BudgetMinOrderByAggregateInput = {
@@ -408,6 +429,7 @@ export type BudgetMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
 }
 
 export type BudgetSumOrderByAggregateInput = {
@@ -504,6 +526,7 @@ export type BudgetCreateWithoutUserInput = {
   period?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  deletedAt?: Date | string | null
   category: Prisma.CategoryCreateNestedOneWithoutBudgetsInput
 }
 
@@ -514,6 +537,7 @@ export type BudgetUncheckedCreateWithoutUserInput = {
   categoryId: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  deletedAt?: Date | string | null
 }
 
 export type BudgetCreateOrConnectWithoutUserInput = {
@@ -552,6 +576,7 @@ export type BudgetScalarWhereInput = {
   userId?: Prisma.StringFilter<"Budget"> | string
   createdAt?: Prisma.DateTimeFilter<"Budget"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Budget"> | Date | string
+  deletedAt?: Prisma.DateTimeNullableFilter<"Budget"> | Date | string | null
 }
 
 export type BudgetCreateWithoutCategoryInput = {
@@ -560,6 +585,7 @@ export type BudgetCreateWithoutCategoryInput = {
   period?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  deletedAt?: Date | string | null
   user: Prisma.UserCreateNestedOneWithoutBudgetsInput
 }
 
@@ -570,6 +596,7 @@ export type BudgetUncheckedCreateWithoutCategoryInput = {
   userId: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  deletedAt?: Date | string | null
 }
 
 export type BudgetCreateOrConnectWithoutCategoryInput = {
@@ -604,6 +631,7 @@ export type BudgetCreateManyUserInput = {
   categoryId: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  deletedAt?: Date | string | null
 }
 
 export type BudgetUpdateWithoutUserInput = {
@@ -612,6 +640,7 @@ export type BudgetUpdateWithoutUserInput = {
   period?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   category?: Prisma.CategoryUpdateOneRequiredWithoutBudgetsNestedInput
 }
 
@@ -622,6 +651,7 @@ export type BudgetUncheckedUpdateWithoutUserInput = {
   categoryId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type BudgetUncheckedUpdateManyWithoutUserInput = {
@@ -631,6 +661,7 @@ export type BudgetUncheckedUpdateManyWithoutUserInput = {
   categoryId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type BudgetCreateManyCategoryInput = {
@@ -640,6 +671,7 @@ export type BudgetCreateManyCategoryInput = {
   userId: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  deletedAt?: Date | string | null
 }
 
 export type BudgetUpdateWithoutCategoryInput = {
@@ -648,6 +680,7 @@ export type BudgetUpdateWithoutCategoryInput = {
   period?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutBudgetsNestedInput
 }
 
@@ -658,6 +691,7 @@ export type BudgetUncheckedUpdateWithoutCategoryInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type BudgetUncheckedUpdateManyWithoutCategoryInput = {
@@ -667,6 +701,7 @@ export type BudgetUncheckedUpdateManyWithoutCategoryInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 
@@ -679,6 +714,7 @@ export type BudgetSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   userId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  deletedAt?: boolean
   category?: boolean | Prisma.CategoryDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["budget"]>
@@ -691,6 +727,7 @@ export type BudgetSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   userId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  deletedAt?: boolean
   category?: boolean | Prisma.CategoryDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["budget"]>
@@ -703,6 +740,7 @@ export type BudgetSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   userId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  deletedAt?: boolean
   category?: boolean | Prisma.CategoryDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["budget"]>
@@ -715,9 +753,10 @@ export type BudgetSelectScalar = {
   userId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  deletedAt?: boolean
 }
 
-export type BudgetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "amount" | "period" | "categoryId" | "userId" | "createdAt" | "updatedAt", ExtArgs["result"]["budget"]>
+export type BudgetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "amount" | "period" | "categoryId" | "userId" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["budget"]>
 export type BudgetInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   category?: boolean | Prisma.CategoryDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -745,6 +784,7 @@ export type $BudgetPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     userId: string
     createdAt: Date
     updatedAt: Date
+    deletedAt: Date | null
   }, ExtArgs["result"]["budget"]>
   composites: {}
 }
@@ -1177,6 +1217,7 @@ export interface BudgetFieldRefs {
   readonly userId: Prisma.FieldRef<"Budget", 'String'>
   readonly createdAt: Prisma.FieldRef<"Budget", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Budget", 'DateTime'>
+  readonly deletedAt: Prisma.FieldRef<"Budget", 'DateTime'>
 }
     
 

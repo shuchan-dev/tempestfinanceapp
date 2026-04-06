@@ -11,22 +11,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getUserId } from "@/lib/session";
+import { resolveUserId } from "@/lib/api-utils";
 import type { ApiResponse, DebtData, CreateDebtPayload } from "@/types";
-
-async function resolveUserId() {
-  const userId = await getUserId();
-  if (!userId)
-    return {
-      userId: null,
-      error: NextResponse.json(
-        { success: false as const, error: "Tidak terautentikasi" },
-        { status: 401 },
-      ),
-    };
-  return { userId, error: null };
-}
-
 // ─── GET /api/debts ───────────────────────────────────────────
 export async function GET(req: NextRequest): Promise<NextResponse<ApiResponse<DebtData[]>>> {
   try {
@@ -41,6 +27,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<ApiResponse<De
     const debts = await db.debt.findMany({
       where: {
         userId: userId!,
+        deletedAt: null,
         ...(type && { type }),
         ...(isPaid !== undefined && { isPaid }),
       },
@@ -182,7 +169,7 @@ export async function DELETE(req: NextRequest): Promise<NextResponse<ApiResponse
       );
     }
 
-    await db.debt.delete({ where: { id } });
+    await db.debt.update({ where: { id }, data: { deletedAt: new Date() } });
     return NextResponse.json({ success: true, data: true });
   } catch (error) {
     console.error("[DELETE /api/debts] Error:", error);

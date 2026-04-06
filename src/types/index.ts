@@ -53,6 +53,11 @@ export interface TransactionData {
   toAccountId?: string | null;
   toAccount?: Pick<AccountData, "id" | "name" | "icon" | "color"> | null;
   adminFee?: number | null;
+  isRecurring?: boolean;
+  recurrenceRule?: string | null;
+  recurrenceEndDate?: Date | null;
+  recurrenceParentId?: string | null;
+  isRecurringInstance?: boolean;
 }
 
 /** Data budget threshold per kategori */
@@ -91,11 +96,43 @@ export interface DebtData {
   updatedAt: Date;
 }
 
+/** Data goal tabungan/target finansial */
+export interface GoalData {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  targetDate: Date;
+  icon?: string | null;
+  color?: string | null;
+  accountId?: string | null;
+  account?: Pick<AccountData, "id" | "name"> | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 /** Data analytics monthly */
 export interface MonthlyData {
   month: string; // "2026-03"
   income: number;
   expense: number;
+}
+
+/** Category spending breakdown */
+export interface CategorySpending {
+  categoryId: string;
+  categoryName: string;
+  categoryIcon?: string | null;
+  spent: number;
+  budget?: number; // If a budget exists for this category
+  percentage: number; // spent / (budget or estimate) * 100
+}
+
+/** Top merchant data */
+export interface TopMerchant {
+  description: string;
+  amount: number;
+  count: number; // How many times this merchant was used
 }
 
 /** Shape response analytics */
@@ -106,6 +143,8 @@ export interface AnalyticsData {
   netFlowThisMonth: number;
   cashflow: MonthlyData[];
   budgetProgress: (BudgetData & { spent: number; percentage: number })[];
+  categorySpending: CategorySpending[];
+  topMerchants: TopMerchant[];
 }
 
 // ============================================================
@@ -121,6 +160,9 @@ export interface CreateTransactionPayload {
   date?: string;
   toAccountId?: string;
   adminFee?: number;
+  isRecurring?: boolean;
+  recurrenceRule?: string;
+  recurrenceEndDate?: string;
 }
 
 export interface CreateAccountPayload {
@@ -149,6 +191,26 @@ export interface CreateDebtPaymentPayload {
   debtId: string;
   amount: number;
   date?: string;
+}
+
+export interface CreateGoalPayload {
+  name: string;
+  targetAmount: number;
+  targetDate: string; // ISO string
+  accountId?: string;
+  icon?: string;
+  color?: string;
+  currentAmount?: number;
+}
+
+export interface UpdateGoalPayload {
+  name?: string;
+  targetAmount?: number;
+  targetDate?: string;
+  currentAmount?: number;
+  accountId?: string;
+  icon?: string;
+  color?: string;
 }
 
 // ============================================================
