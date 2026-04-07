@@ -2,30 +2,48 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
-  const sessionToken = request.cookies.get("tempest_session")?.value;
-  const { pathname } = request.nextUrl;
+  const session = request.cookies.get("tempest_session");
+  const pathname = request.nextUrl.pathname;
 
-  // Allow access to auth-related routes and public assets
-  const isPublicRoute =
-    pathname === "/login" ||
-    pathname === "/register" ||
-    pathname.startsWith("/api/auth");
+  // Rute publik yang boleh diakses tanpa login
+  const publicRoutes = ["/login", "/register"];
 
-  if (!sessionToken && !isPublicRoute) {
-    // 1. Jika request mengarah ke /api/..., kembalikan JSON error 401
-    if (pathname.startsWith("/api/")) {
+  // Rute API publik (auth endpoints)
+  const publicApiRoutes = ["/api/auth/login", "/api/auth/register"];
+
+  // Rute statis/internal yang selalu diizinkan
+  if (
+    pathname.startsWith("/_next") ||
+    pathname === "/favicon.ico" ||
+    pathname === "/sw.js" ||
+    pathname === "/manifest.json"
+  ) {
+    return NextResponse.next();
+  }
+
+  // API routes: protect non-public API endpoints di Edge runtime
+  if (pathname.startsWith("/api")) {
+    // Skip public API routes
+    if (publicApiRoutes.some((p) => pathname.startsWith(p))) {
+      return NextResponse.next();
+    }
+    // Cek session cookie untuk non-public API — early rejection sebelum masuk Node runtime
+    if (!session?.value) {
       return NextResponse.json(
-        { success: false, error: "Sesi berakhir atau tidak valid" },
-        { status: 401 },
+        { success: false, error: "Tidak terautentikasi" },
+        { status: 401 }
       );
     }
+    return NextResponse.next();
+  }
 
-    // 2. Jika request mengarah ke halaman UI, redirect ke halaman login
+  // Jika belum login dan coba akses halaman non-publik, tendang ke login
+  if (!session && !publicRoutes.includes(pathname)) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (sessionToken && (pathname === "/login" || pathname === "/register")) {
-    // Redirect authenticated users away from login/register
+  // Jika sudah login dan mencoba ke halaman login/register, tendang ke beranda
+  if (session && publicRoutes.includes(pathname)) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
@@ -34,13 +52,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
-     * - manifest.json, sw.js (PWA files)
-     */
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|manifest.json|manifest.webmanifest|icon|apple-icon|sw.js).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.json).*)",
   ],
 };

@@ -48,6 +48,8 @@ next-env.d.ts
 
 /generated/prisma
 
+tmp_replace.mjs
+
 #plan
 flow.md
 plan-fase1.md
@@ -56,3 +58,8 @@ plan-fase4.md
 proposal.md
 standartcode.md
 strategi.md
+BEST_PRACTICES_GUIDE.md
+CODE_REVIEW_IMPROVEMENT_GUIDE.md
+RATE_LIMITING_SCENARIOS.md
+REVIEW_SUGUST_IMPROVEMENT.md
+UI_FEATURE_IMPROVEMENT_GUIDE.md

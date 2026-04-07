@@ -10,22 +10,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getUserId } from "@/lib/session";
+import { resolveUserId } from "@/lib/api-utils";
+import { validateString, validateEnum, sanitizeString } from "@/lib/validators";
 import type { ApiResponse, CategoryData } from "@/types";
-
-async function resolveUserId() {
-  const userId = await getUserId();
-  if (!userId)
-    return {
-      userId: null,
-      error: NextResponse.json(
-        { success: false as const, error: "Tidak terautentikasi" },
-        { status: 401 },
-      ),
-    };
-  return { userId, error: null };
-}
-
+import { logger } from "@/lib/logger";
 // ─── GET /api/categories ──────────────────────────────────────
 export async function GET(
   req: NextRequest,
@@ -44,6 +32,7 @@ export async function GET(
         where: {
           userId: userId!,
           parentId: null,
+          deletedAt: null,
           ...(type ? { type } : {}),
         },
         include: {
@@ -58,13 +47,13 @@ export async function GET(
 
     // Default flat list — semua kategori (parent & children)
     const categories = await db.category.findMany({
-      where: { userId: userId!, ...(type ? { type } : {}) },
+      where: { userId: userId!, deletedAt: null, ...(type ? { type } : {}) },
       orderBy: [{ parentId: "asc" }, { order: "asc" }, { name: "asc" }],
     });
 
     return NextResponse.json({ success: true, data: categories as unknown as CategoryData[] });
   } catch (error) {
-    console.error("[GET /api/categories] Error:", error);
+    logger.error("[GET /api/categories] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengambil kategori" },
       { status: 500 },
@@ -83,18 +72,21 @@ export async function POST(
     const body: { name: string; type: string; icon?: string; parentId?: string } =
       await req.json();
 
-    if (!body.name?.trim()) {
+    if (!validateString(body.name, 1)) {
       return NextResponse.json(
         { success: false, error: "Nama kategori tidak boleh kosong" },
         { status: 400 },
       );
     }
-    if (!["INCOME", "EXPENSE"].includes(body.type)) {
+    if (!validateEnum(body.type, ["INCOME", "EXPENSE"])) {
       return NextResponse.json(
         { success: false, error: "Tipe kategori harus INCOME atau EXPENSE" },
         { status: 400 },
       );
     }
+
+    // Sanitization
+    body.name = sanitizeString(body.name)!;
 
     // Jika ada parentId, validasi bahwa parent milik user yang sama
     if (body.parentId) {
@@ -111,6 +103,20 @@ export async function POST(
       if (parent.type !== body.type) {
         return NextResponse.json(
           { success: false, error: "Tipe sub-kategori harus sama dengan parent" },
+          { status: 400 },
+        );
+      }
+
+      // Validasi maks kedalaman (3 level: Root -> Sub -> Sub-Sub)
+      let depth = 1;
+      let p: any = parent;
+      while (p && p.parentId) {
+        depth++;
+        p = await db.category.findFirst({ where: { id: p.parentId } });
+      }
+      if (depth >= 3) {
+        return NextResponse.json(
+          { success: false, error: "Maksimal kedalaman sub-kategori adalah 3 level (Root -> Sub -> Sub-Sub)" },
           { status: 400 },
         );
       }
@@ -139,9 +145,57 @@ export async function POST(
       { status: 201 },
     );
   } catch (error) {
-    console.error("[POST /api/categories] Error:", error);
+    logger.error("[POST /api/categories] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal membuat kategori" },
+      { status: 500 },
+    );
+  }
+}
+
+// ─── PATCH /api/categories ─────────────────────────────────────
+export async function PATCH(
+  req: NextRequest,
+): Promise<NextResponse<ApiResponse<CategoryData>>> {
+  try {
+    const { userId, error } = await resolveUserId();
+    if (error) return error;
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "ID Kategori wajib diisi" },
+        { status: 400 },
+      );
+    }
+
+    const body: { name?: string; icon?: string } = await req.json();
+
+    const category = await db.category.findFirst({
+      where: { id, userId: userId! },
+    });
+    if (!category) {
+      return NextResponse.json(
+        { success: false, error: "Kategori tidak ditemukan" },
+        { status: 404 },
+      );
+    }
+
+    const updated = await db.category.update({
+      where: { id },
+      data: {
+        ...(body.name !== undefined && { name: body.name.trim() }),
+        ...(body.icon !== undefined && { icon: body.icon }),
+      },
+    });
+
+    return NextResponse.json({ success: true, data: updated as unknown as CategoryData });
+  } catch (error) {
+    logger.error("[PATCH /api/categories] Error:", error);
+    return NextResponse.json(
+      { success: false, error: "Gagal mengupdate kategori" },
       { status: 500 },
     );
   }
@@ -193,15 +247,15 @@ export async function DELETE(
           where: { categoryId: id },
           data: { categoryId: null },
         });
-        await tx.budget.deleteMany({ where: { categoryId: id } });
-        await tx.category.delete({ where: { id } });
+        await tx.budget.updateMany({ where: { categoryId: id }, data: { deletedAt: new Date() } });
+        await tx.category.update({ where: { id }, data: { deletedAt: new Date() } });
       },
       { maxWait: 10000, timeout: 20000 },
     );
 
     return NextResponse.json({ success: true, data: true });
   } catch (error) {
-    console.error("[DELETE /api/categories] Error:", error);
+    logger.error("[DELETE /api/categories] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal menghapus kategori" },
       { status: 500 },

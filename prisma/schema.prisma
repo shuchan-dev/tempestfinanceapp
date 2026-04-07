@@ -15,11 +15,12 @@ datasource db {
 // MODEL USER — Autentikasi Pengguna (PIN 6 Digit)
 // ============================================================
 model User {
-  id         String   @id @default(cuid())
-  name       String
-  pin        String   @unique
-  isApproved Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  id         String    @id @default(cuid())
+  name       String    @unique
+  pin        String
+  isApproved Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime?
 
   // ─── Relasi balik: data milik user ini ───────────────────
   accounts     Account[]
@@ -28,31 +29,39 @@ model User {
   budgets      Budget[]
   debts        Debt[]
   debtPayments DebtPayment[]
+  goals        Goal[]
+  quickAdds    QuickAdd[]
+  notifications Notification[]
 }
 
 // ============================================================
 // MODEL ACCOUNT — Mewakili setiap akun keuangan pengguna
 // ============================================================
 model Account {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
-  balance   Float    @default(0)
-  uangGoib  Float    @default(0)
+  balance   Float     @default(0)
+  uangGoib  Float     @default(0)
   icon      String?
   color     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   // ─── Self-relation: Parent → Children (Kantong) ───────────
-  parentId  String?
-  parent    Account?  @relation("SubAccounts", fields: [parentId], references: [id], onDelete: Cascade)
-  children  Account[] @relation("SubAccounts")
+  parentId String?
+  parent   Account?  @relation("SubAccounts", fields: [parentId], references: [id], onDelete: Cascade)
+  children Account[] @relation("SubAccounts")
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   transactions Transaction[] @relation("AccountTransactions")
   transfersIn  Transaction[] @relation("TransferTo")
+  goals        Goal[]
+  quickAdds    QuickAdd[]
+
+  @@index([userId, deletedAt])
 }
 
 // ============================================================
@@ -60,11 +69,12 @@ model Account {
 // Contoh: Makan (Parent) → Kopi, Snack (Children)
 // ============================================================
 model Category {
-  id    String  @id @default(cuid())
-  name  String
-  type  String // "INCOME" atau "EXPENSE"
-  icon  String?
-  order Int     @default(0) // Urutan tampil di UI
+  id        String    @id @default(cuid())
+  name      String
+  type      String // "INCOME" atau "EXPENSE"
+  icon      String?
+  order     Int       @default(0) // Urutan tampil di UI
+  deletedAt DateTime?
 
   // ─── Self-relation: Parent → Children ────────────────────
   // parentId null = kategori root/parent
@@ -72,39 +82,57 @@ model Category {
   parent   Category?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: SetNull)
   children Category[] @relation("SubCategories")
 
-  // ─── Relasi ke User ──────────────────────────────────────
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   transactions Transaction[]
   budgets      Budget[]
+  quickAdds    QuickAdd[]
+
+  @@index([userId, deletedAt])
+  @@index([userId, type])
 }
 
 // ============================================================
 // MODEL TRANSACTION — Data inti setiap transaksi keuangan
 // ============================================================
 model Transaction {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   amount      Float
   type        String // "INCOME" | "EXPENSE" | "TRANSFER"
   description String?
-  date        DateTime @default(now())
-  createdAt   DateTime @default(now())
-  isSynced    Boolean  @default(false)
+  date        DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+  isSynced    Boolean   @default(false)
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   accountId String
-  account   Account @relation("AccountTransactions", fields: [accountId], references: [id])
+  account   Account @relation("AccountTransactions", fields: [accountId], references: [id], onDelete: Cascade)
 
   categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id])
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   toAccountId String?
-  toAccount   Account? @relation("TransferTo", fields: [toAccountId], references: [id])
+  toAccount   Account? @relation("TransferTo", fields: [toAccountId], references: [id], onDelete: Cascade)
 
   adminFee Float? @default(0)
+  tags     String? // Comma-separated tags, e.g., "project,personal,meeting"
+
+  // ─── Recurring Transactions Support ──────────────────────
+  isRecurring         Boolean   @default(false)
+  recurrenceRule      String? // RRULE format: "FREQ=MONTHLY;BYMONTHDAY=5"
+  recurrenceEndDate   DateTime?
+  recurrenceParentId  String? // Link to original recurring tx
+  isRecurringInstance Boolean   @default(false)
+
+  @@index([userId, date])
+  @@index([userId, type, date])
+  @@index([userId, categoryId, date])
+  @@index([userId, accountId, date])
+  @@index([userId, deletedAt])
 }
 
 // ============================================================
@@ -122,8 +150,9 @@ model Budget {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   // Satu budget per user per kategori per periode
   @@unique([userId, categoryId, period])
@@ -149,24 +178,94 @@ model Debt {
 
   payments DebtPayment[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([userId, type, isPaid])
+  @@index([userId, dueDate])
 }
 
 // ============================================================
 // MODEL DEBTPAYMENT — Riwayat angsuran/cicilan hutang/piutang
 // ============================================================
 model DebtPayment {
+  id     String   @id @default(cuid())
+  amount Float
+  date   DateTime @default(now())
+
+  debtId String
+  debt   Debt   @relation(fields: [debtId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+// ============================================================
+// MODEL GOAL — Target finansial pengguna (tabungan, investasi, dll)
+// ============================================================
+model Goal {
+  id            String   @id @default(cuid())
+  name          String // Nama goal (e.g., "Liburan ke Bali", "Motor Baru")
+  targetAmount  Float // Target nominal yang ingin dicapai
+  currentAmount Float    @default(0) // Nominal saat ini / sudah dikumpulkan
+  targetDate    DateTime // Tanggal target pencapaian
+  icon          String? // Emoji/icon representasi goal
+  color         String? // Warna tampilan di UI
+
+  accountId String?
+  account   Account? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([userId, deletedAt])
+}
+
+// ============================================================
+// MODEL QUICKADD — Preset transaksi cepat (1-tap entry)
+// ============================================================
+model QuickAdd {
+  id         String   @id @default(cuid())
+  name       String   // Label tampilan (e.g., "Kopi Pagi")
+  amount     Float    // Nominal default
+  icon       String?  // Emoji icon (e.g., "☕")
+  
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  accountId  String
+  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  order      Int      @default(0) // Urutan tampil
+  createdAt  DateTime @default(now())
+}
+
+// ============================================================
+// MODEL NOTIFICATION — Riwayat notifikasi user
+// ============================================================
+model Notification {
   id        String   @id @default(cuid())
-  amount    Float
-  date      DateTime @default(now())
-
-  debtId    String
-  debt      Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
-
+  type      String   // "BUDGET_ALERT" | "DEBT_DUE" | "GOAL_REACHED" | "SYSTEM"
+  title     String   // Judul notifikasi
+  message   String   // Isi pesan
+  icon      String?  // Emoji icon
+  isRead    Boolean  @default(false)
+  link      String?  // URL untuk navigate saat di-tap (optional)
+  
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }

@@ -10,22 +10,12 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getUserId } from "@/lib/session";
+import { resolveUserId } from "@/lib/api-utils";
+import { validateString, validateNumber, sanitizeString } from "@/lib/validators";
+import { checkOwnership } from "@/lib/ownership-check";
 import type { CreateAccountPayload, ApiResponse, AccountData } from "@/types";
-
-// ─── Helper: Ambil userId dari sesi atau kembalikan error ─────
-async function resolveUserId() {
-  const userId = await getUserId();
-  if (!userId)
-    return {
-      userId: null,
-      error: NextResponse.json(
-        { success: false as const, error: "Tidak terautentikasi" },
-        { status: 401 },
-      ),
-    };
-  return { userId, error: null };
-}
+import { Prisma } from "@/generated/prisma/client";
+import { logger } from "@/lib/logger";
 
 // ─── GET /api/accounts ────────────────────────────────────────
 /** Mengambil seluruh akun milik user yang sedang login. */
@@ -35,14 +25,14 @@ export async function GET(): Promise<NextResponse<ApiResponse<AccountData[]>>> {
     if (error) return error;
 
     const accounts = await db.account.findMany({
-      where: { userId: userId!, parentId: null },
+      where: { userId: userId!, parentId: null, deletedAt: null },
       include: { children: true },
       orderBy: { createdAt: "asc" },
     });
 
     return NextResponse.json({ success: true, data: accounts });
   } catch (error) {
-    console.error("[GET /api/accounts] Error:", error);
+    logger.error("[GET /api/accounts] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengambil data akun" },
       { status: 500 },
@@ -61,15 +51,26 @@ export async function POST(
 
     const body: CreateAccountPayload = await req.json();
 
-    if (!body.name?.trim()) {
+    if (!validateString(body.name, 1)) {
       return NextResponse.json(
         { success: false, error: "Nama akun tidak boleh kosong" },
         { status: 400 },
       );
     }
 
+    // Validasi balance tidak boleh negatif
+    if (body.balance !== undefined && !validateNumber(body.balance, 0)) {
+      return NextResponse.json(
+        { success: false, error: "Saldo tidak boleh negatif" },
+        { status: 400 },
+      );
+    }
+
+    // Sanitization
+    body.name = sanitizeString(body.name)!;
+
     const account = await db.$transaction(
-      async (tx: any) => {
+      async (tx: Prisma.TransactionClient) => {
         // 1. Buat akun baru yang berelasi ke userId
         const newAccount = await tx.account.create({
           data: {
@@ -107,7 +108,7 @@ export async function POST(
       { status: 201 },
     );
   } catch (error) {
-    console.error("[POST /api/accounts] Error:", error);
+    logger.error("[POST /api/accounts] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal membuat akun baru" },
       { status: 500 },
@@ -135,30 +136,34 @@ export async function DELETE(
     }
 
     // Pastikan akun ini milik user aktif (mencegah IDOR attack)
-    const account = await db.account.findFirst({
-      where: { id, userId: userId! },
+    const { error: ownershipError, item: account } = await checkOwnership("account", id, userId!);
+    if (ownershipError || !account) return ownershipError || NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+    
+    // Include children manually as checkOwnership doesn't include it
+    const accountWithChildren = await db.account.findUnique({
+      where: { id },
       include: { children: true }
     });
-
-    if (!account) {
-      return NextResponse.json(
-        { success: false, error: "Akun tidak ditemukan" },
-        { status: 404 },
-      );
+    
+    if (!accountWithChildren) {
+       return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
-    let totalBalance = account.balance;
-    let totalUangGoib = account.uangGoib;
-    if (account.children) {
-      for (const child of account.children) {
+    let totalBalance = accountWithChildren.balance;
+    let totalUangGoib = accountWithChildren.uangGoib;
+    if (accountWithChildren.children) {
+      for (const child of accountWithChildren.children) {
         totalBalance += child.balance;
         totalUangGoib += child.uangGoib;
       }
     }
 
-    if (totalBalance !== 0 || totalBalance < 0) {
+    if (totalBalance !== 0) {
       return NextResponse.json(
-        { success: false, error: "Gagal: Total saldo akun induk dan kantong harus 0 sebelum dihapus!" },
+        {
+          success: false,
+          error: `Gagal: Total saldo harus 0 sebelum menghapus akun. Saat ini: ${totalBalance}`,
+        },
         { status: 400 },
       );
     }
@@ -173,21 +178,35 @@ export async function DELETE(
       );
     }
 
-    const idsToDelete = [account.id, ...(account.children?.map((c: any) => c.id) || [])];
+    const idsToDelete = [
+      accountWithChildren.id,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...(accountWithChildren.children?.map((c: any) => c.id) || []),
+    ];
 
     await db.$transaction(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (tx: any) => {
-        await tx.transaction.deleteMany({
-          where: { OR: [{ accountId: { in: idsToDelete } }, { toAccountId: { in: idsToDelete } }] },
+        await tx.transaction.updateMany({
+          where: {
+            OR: [
+              { accountId: { in: idsToDelete } },
+              { toAccountId: { in: idsToDelete } },
+            ],
+          },
+          data: { deletedAt: new Date() },
         });
-        await tx.account.delete({ where: { id } });
+        await tx.account.updateMany({
+          where: { id: { in: idsToDelete } },
+          data: { deletedAt: new Date() },
+        });
       },
       { maxWait: 10000, timeout: 20000 },
     );
 
     return NextResponse.json({ success: true, data: true });
   } catch (error) {
-    console.error("[DELETE /api/accounts] Error:", error);
+    logger.error("[DELETE /api/accounts] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal menghapus akun" },
       { status: 500 },

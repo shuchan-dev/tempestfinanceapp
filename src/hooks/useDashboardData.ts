@@ -1,16 +1,13 @@
 import useSWR from "swr";
 import type { AccountData, TransactionData } from "@/types";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
 export function useDashboardData() {
   const { data: accountsRes, isLoading: accountsLoading } = useSWR<{
     data: AccountData[];
-  }>("/api/accounts", fetcher);
+  }>("/api/accounts");
 
   const { data: txRes, isLoading: txLoading } = useSWR<{ data: TransactionData[] }>(
-    "/api/transactions?limit=10",
-    fetcher,
+    "/api/transactions?limit=10"
   );
 
   const accounts = accountsRes?.data || [];

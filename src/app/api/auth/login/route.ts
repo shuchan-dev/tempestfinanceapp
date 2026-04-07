@@ -2,8 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { signSession } from "@/lib/session-utils";
 import bcrypt from "bcryptjs";
+import { logger } from "@/lib/logger";
+import {
+  withAuthRateLimit,
+  recordLoginFailure,
+  clearLoginFailure,
+} from "@/lib/auth-rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rateLimitCheck = withAuthRateLimit(req);
+  if (rateLimitCheck?.response) return rateLimitCheck.response;
+
   try {
     const { name, pin } = await req.json();
 
@@ -22,21 +31,34 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const genericError = "Nama atau PIN tidak valid.";
+
     // 2. Jika nama tidak ada di database
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Nama tidak ditemukan di sistem." },
-        { status: 404 },
+      // Dummy compare to avoid timing attack
+      await bcrypt.compare(pin, "$2b$10$placeholder.hash.that.looks.real.abc");
+
+      const failureCookies = recordLoginFailure(req);
+      const response = NextResponse.json(
+        { success: false, error: genericError },
+        { status: 401 },
       );
+      response.headers.append("Set-Cookie", failureCookies.setCookieStart);
+      response.headers.append("Set-Cookie", failureCookies.setCookieTime);
+      return response;
     }
 
     // 3. Jika nama ada, cek apakah PIN-nya cocok menggunakan bcrypt
     const isPinValid = await bcrypt.compare(pin, user.pin);
     if (!isPinValid) {
-      return NextResponse.json(
-        { success: false, error: "PIN yang Anda masukkan salah." },
-        { status: 401 }, // 401 Unauthorized
+      const failureCookies = recordLoginFailure(req);
+      const response = NextResponse.json(
+        { success: false, error: genericError },
+        { status: 401 },
       );
+      response.headers.append("Set-Cookie", failureCookies.setCookieStart);
+      response.headers.append("Set-Cookie", failureCookies.setCookieTime);
+      return response;
     }
 
     if (!user.isApproved) {
@@ -67,13 +89,18 @@ export async function POST(req: NextRequest) {
       path: "/",
     });
 
+    // Clear failed login attempt cookies on successful login
+    const clearCookies = clearLoginFailure();
+    clearCookies.forEach((cookie) =>
+      response.headers.append("Set-Cookie", cookie),
+    );
+
     return response;
   } catch (error) {
-    console.error("[POST /api/auth/login] Error:", error);
+    logger.error("[POST /api/auth/login] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal memulai sesi login" },
       { status: 500 },
     );
   }
 }
-

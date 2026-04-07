@@ -52,3 +52,18 @@ export type Debt = Prisma.DebtModel
  * 
  */
 export type DebtPayment = Prisma.DebtPaymentModel
+/**
+ * Model Goal
+ * 
+ */
+export type Goal = Prisma.GoalModel
+/**
+ * Model QuickAdd
+ * 
+ */
+export type QuickAdd = Prisma.QuickAddModel
+/**
+ * Model Notification
+ * 
+ */
+export type Notification = Prisma.NotificationModel

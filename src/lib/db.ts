@@ -5,6 +5,15 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+import { config } from "dotenv";
+import { validateEnv } from "./env-validation";
+
+// Pastikan .env diload di non-Next.js environments (misal untuk script manual)
+config();
+
+// Validasi environment variable
+validateEnv();
+
 function createPrismaClient() {
   const adapter = new PrismaLibSql({
     url: process.env.TURSO_DATABASE_URL!,

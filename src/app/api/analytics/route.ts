@@ -1,27 +1,26 @@
 /**
  * API Route: /api/analytics
  *
- * GET — Ambil data analitik untuk dashboard analytics:
- *   - Burn rate (rata-rata pengeluaran per hari bulan ini)
- *   - Total income/expense bulan ini
- *   - Cashflow 6 bulan terakhir (untuk chart)
- *   - Budget progress per kategori
+ * GET — Combined analytics data (backward-compatible monolith).
+ * Individual sub-endpoints are also available:
+ *   - /api/analytics/overview
+ *   - /api/analytics/cashflow
+ *   - /api/analytics/categories
+ *   - /api/analytics/merchants
+ *   - /api/analytics/budgets
+ *   - /api/analytics/comparison
  */
 
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getUserId } from "@/lib/session";
+import { resolveUserId } from "@/lib/api-utils";
 import type { ApiResponse, AnalyticsData } from "@/types";
+import { logger } from "@/lib/logger";
 
 export async function GET(): Promise<NextResponse<ApiResponse<AnalyticsData>>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
-    }
+    const { userId, error } = await resolveUserId();
+    if (error) return error;
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -30,11 +29,11 @@ export async function GET(): Promise<NextResponse<ApiResponse<AnalyticsData>>> {
     // ── 1. Stats bulan ini ───────────────────────────────────
     const [expenseAgg, incomeAgg] = await Promise.all([
       db.transaction.aggregate({
-        where: { userId, type: "EXPENSE", date: { gte: startOfMonth } },
+        where: { userId: userId!, type: "EXPENSE", date: { gte: startOfMonth }, deletedAt: null },
         _sum: { amount: true },
       }),
       db.transaction.aggregate({
-        where: { userId, type: "INCOME", date: { gte: startOfMonth } },
+        where: { userId: userId!, type: "INCOME", date: { gte: startOfMonth }, deletedAt: null },
         _sum: { amount: true },
       }),
     ]);
@@ -48,14 +47,14 @@ export async function GET(): Promise<NextResponse<ApiResponse<AnalyticsData>>> {
     const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
     const allTx = await db.transaction.findMany({
       where: {
-        userId,
+        userId: userId!,
+        deletedAt: null,
         type: { in: ["INCOME", "EXPENSE"] },
         date: { gte: sixMonthsAgo },
       },
       select: { date: true, type: true, amount: true },
     });
 
-    // Group by bulan
     const monthlyMap = new Map<string, { income: number; expense: number }>();
     for (const tx of allTx) {
       const key = `${tx.date.getFullYear()}-${String(tx.date.getMonth() + 1).padStart(2, "0")}`;
@@ -65,29 +64,31 @@ export async function GET(): Promise<NextResponse<ApiResponse<AnalyticsData>>> {
       monthlyMap.set(key, existing);
     }
 
-    // Pastikan 6 bulan selalu ada (meski 0)
     const cashflow = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      cashflow.push({ month: key, ...(monthlyMap.get(key) ?? { income: 0, expense: 0 }) });
+      cashflow.push({
+        month: key,
+        ...(monthlyMap.get(key) ?? { income: 0, expense: 0 }),
+      });
     }
 
     // ── 3. Budget Progress ───────────────────────────────────
     const budgets = await db.budget.findMany({
-      where: { userId },
+      where: { userId: userId! },
       include: { category: true },
     });
 
     const categoryIds = budgets.map((b) => b.categoryId);
 
-    // Batch query: get expense sums for all matching categories in one go
     const groupedTransactions = await db.transaction.groupBy({
       by: ["categoryId"],
       where: {
-        userId,
+        userId: userId!,
         categoryId: { in: categoryIds },
         type: "EXPENSE",
+        deletedAt: null,
         date: { gte: startOfMonth },
       },
       _sum: { amount: true },
@@ -114,6 +115,71 @@ export async function GET(): Promise<NextResponse<ApiResponse<AnalyticsData>>> {
       };
     });
 
+    // ── 4. Category Spending ─────────────────────────────────
+    const allTransactionsThisMonth = await db.transaction.findMany({
+      where: {
+        userId: userId!,
+        type: "EXPENSE",
+        date: { gte: startOfMonth },
+        deletedAt: null,
+      },
+      include: { category: true },
+    });
+
+    const categoryMap = new Map<
+      string,
+      { name: string; icon?: string | null; amount: number }
+    >();
+    for (const tx of allTransactionsThisMonth) {
+      const catId = tx.categoryId || "uncategorized";
+      const catName = tx.category?.name || "Uncategorized";
+      const catIcon = tx.category?.icon;
+      const existing = categoryMap.get(catId) ?? {
+        name: catName,
+        icon: catIcon,
+        amount: 0,
+      };
+      existing.amount += tx.amount;
+      categoryMap.set(catId, existing);
+    }
+
+    const categorySpending = Array.from(categoryMap.entries()).map(
+      ([catId, data]) => {
+        const budget = budgets.find((b) => b.categoryId === catId);
+        const percentage = budget ? (data.amount / budget.amount) * 100 : 0;
+        return {
+          categoryId: catId,
+          categoryName: data.name,
+          categoryIcon: data.icon,
+          spent: data.amount,
+          budget: budget?.amount,
+          percentage: Math.round(percentage),
+        };
+      },
+    );
+    categorySpending.sort((a, b) => b.spent - a.spent);
+
+    // ── 5. Top Merchants ─────────────────────────────────────
+    const merchantMap = new Map<string, { amount: number; count: number }>();
+    for (const tx of allTransactionsThisMonth) {
+      if (tx.description && tx.description.trim()) {
+        const desc = tx.description.trim();
+        const existing = merchantMap.get(desc) ?? { amount: 0, count: 0 };
+        existing.amount += tx.amount;
+        existing.count += 1;
+        merchantMap.set(desc, existing);
+      }
+    }
+
+    const topMerchants = Array.from(merchantMap.entries())
+      .map(([desc, data]) => ({
+        description: desc,
+        amount: data.amount,
+        count: data.count,
+      }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 10);
+
     return NextResponse.json({
       success: true,
       data: {
@@ -123,10 +189,12 @@ export async function GET(): Promise<NextResponse<ApiResponse<AnalyticsData>>> {
         netFlowThisMonth,
         cashflow,
         budgetProgress,
+        categorySpending,
+        topMerchants,
       },
     });
   } catch (error) {
-    console.error("[GET /api/analytics] Error:", error);
+    logger.error("[GET /api/analytics] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengambil data analitik" },
       { status: 500 },

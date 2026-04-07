@@ -12,6 +12,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getUserId } from "@/lib/session";
 import type { ApiResponse } from "@/types";
+import { logger } from "@/lib/logger";
 
 /** Data akun default */
 const DEFAULT_ACCOUNTS = [
@@ -75,7 +76,7 @@ export async function POST(): Promise<
       data: { accounts: accountsCreated, categories: categoriesCreated },
     });
   } catch (error) {
-    console.error("[POST /api/seed] Error:", error);
+    logger.error("[POST /api/seed] Error:", error);
     return NextResponse.json(
       { success: false as const, error: "Gagal menginisialisasi data awal" },
       { status: 500 }

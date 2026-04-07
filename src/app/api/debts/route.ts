@@ -11,22 +11,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getUserId } from "@/lib/session";
+import { resolveUserId } from "@/lib/api-utils";
+import { validateString, validateNumber, validateEnum, sanitizeString } from "@/lib/validators";
+import { checkOwnership } from "@/lib/ownership-check";
 import type { ApiResponse, DebtData, CreateDebtPayload } from "@/types";
-
-async function resolveUserId() {
-  const userId = await getUserId();
-  if (!userId)
-    return {
-      userId: null,
-      error: NextResponse.json(
-        { success: false as const, error: "Tidak terautentikasi" },
-        { status: 401 },
-      ),
-    };
-  return { userId, error: null };
-}
-
+import { logger } from "@/lib/logger";
 // ─── GET /api/debts ───────────────────────────────────────────
 export async function GET(req: NextRequest): Promise<NextResponse<ApiResponse<DebtData[]>>> {
   try {
@@ -41,6 +30,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<ApiResponse<De
     const debts = await db.debt.findMany({
       where: {
         userId: userId!,
+        deletedAt: null,
         ...(type && { type }),
         ...(isPaid !== undefined && { isPaid }),
       },
@@ -52,7 +42,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<ApiResponse<De
 
     return NextResponse.json({ success: true, data: debts as unknown as DebtData[] });
   } catch (error) {
-    console.error("[GET /api/debts] Error:", error);
+    logger.error("[GET /api/debts] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengambil data hutang/piutang" },
       { status: 500 },
@@ -68,24 +58,28 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<D
 
     const body: CreateDebtPayload = await req.json();
 
-    if (!["HUTANG", "PIUTANG"].includes(body.type)) {
+    if (!validateEnum(body.type, ["HUTANG", "PIUTANG"])) {
       return NextResponse.json(
         { success: false, error: "Tipe harus HUTANG atau PIUTANG" },
         { status: 400 },
       );
     }
-    if (!body.personName?.trim()) {
+    if (!validateString(body.personName, 1)) {
       return NextResponse.json(
         { success: false, error: "Nama orang wajib diisi" },
         { status: 400 },
       );
     }
-    if (!body.amount || body.amount <= 0) {
+    if (!validateNumber(body.amount, 0.01)) {
       return NextResponse.json(
         { success: false, error: "Nominal harus lebih dari 0" },
         { status: 400 },
       );
     }
+
+    // Sanitization
+    body.personName = sanitizeString(body.personName)!;
+    body.description = sanitizeString(body.description) || undefined;
 
     const debt = await db.debt.create({
       data: {
@@ -103,7 +97,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<D
       { status: 201 },
     );
   } catch (error) {
-    console.error("[POST /api/debts] Error:", error);
+    logger.error("[POST /api/debts] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal menyimpan catatan" },
       { status: 500 },
@@ -128,13 +122,8 @@ export async function PATCH(req: NextRequest): Promise<NextResponse<ApiResponse<
       );
     }
 
-    const existing = await db.debt.findFirst({ where: { id, userId: userId! } });
-    if (!existing) {
-      return NextResponse.json(
-        { success: false, error: "Catatan tidak ditemukan" },
-        { status: 404 },
-      );
-    }
+    const { error: ownershipError } = await checkOwnership("debt", id, userId!);
+    if (ownershipError) return ownershipError;
 
     const body: { isPaid?: boolean } = await req.json();
 
@@ -150,7 +139,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponse<ApiResponse<
 
     return NextResponse.json({ success: true, data: updated as unknown as DebtData });
   } catch (error) {
-    console.error("[PATCH /api/debts] Error:", error);
+    logger.error("[PATCH /api/debts] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal memperbarui catatan" },
       { status: 500 },
@@ -174,18 +163,13 @@ export async function DELETE(req: NextRequest): Promise<NextResponse<ApiResponse
       );
     }
 
-    const existing = await db.debt.findFirst({ where: { id, userId: userId! } });
-    if (!existing) {
-      return NextResponse.json(
-        { success: false, error: "Catatan tidak ditemukan" },
-        { status: 404 },
-      );
-    }
+    const { error: ownershipError } = await checkOwnership("debt", id, userId!);
+    if (ownershipError) return ownershipError;
 
-    await db.debt.delete({ where: { id } });
+    await db.debt.update({ where: { id }, data: { deletedAt: new Date() } });
     return NextResponse.json({ success: true, data: true });
   } catch (error) {
-    console.error("[DELETE /api/debts] Error:", error);
+    logger.error("[DELETE /api/debts] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal menghapus catatan" },
       { status: 500 },
