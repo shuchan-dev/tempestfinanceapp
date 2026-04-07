@@ -44,7 +44,11 @@ interface TransactionFormProps {
   editTransaction?: TransactionData | null;
 }
 
-export function TransactionForm({ children, onSuccess, editTransaction }: TransactionFormProps) {
+export function TransactionForm({
+  children,
+  onSuccess,
+  editTransaction,
+}: TransactionFormProps) {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<TransactionType>("EXPENSE");
   const [amount, setAmount] = useState<string>("");
@@ -228,7 +232,7 @@ export function TransactionForm({ children, onSuccess, editTransaction }: Transa
 
     // Determine if editing or creating
     const isEditing = !!editTransaction;
-    const url = isEditing 
+    const url = isEditing
       ? `/api/transactions/${editTransaction.id}`
       : "/api/transactions";
     const method = isEditing ? "PATCH" : "POST";
@@ -244,7 +248,9 @@ export function TransactionForm({ children, onSuccess, editTransaction }: Transa
       const result = await res.json();
 
       if (result.success) {
-        toast.success(isEditing ? "Transaksi berhasil diperbarui!" : "Transaksi tersimpan!");
+        toast.success(
+          isEditing ? "Transaksi berhasil diperbarui!" : "Transaksi tersimpan!",
+        );
         setOpen(false);
         // Reset form
         setAmount("");
@@ -257,13 +263,14 @@ export function TransactionForm({ children, onSuccess, editTransaction }: Transa
         // Gunakan revalidate: false agar UI ter-update tanpa round-trip DB baru.
         // Data akun perlu di-revalidate karena saldo berubah di server.
         mutate("/api/accounts");
-        
+
         if (isEditing) {
           // For PATCH: update the specific transaction in all caches
           mutate(
-            (key) => typeof key === "string" && key.includes("/api/transactions"),
+            (key) =>
+              typeof key === "string" && key.includes("/api/transactions"),
             undefined,
-            { revalidate: true }
+            { revalidate: true },
           );
         } else {
           // For POST: inject data baru langsung ke cache SWR (zero DB call)
@@ -614,17 +621,21 @@ export function TransactionForm({ children, onSuccess, editTransaction }: Transa
               <label className="text-xs font-semibold text-zinc-500 uppercase">
                 Tags (Opsional)
               </label>
-              <TagInput value={tags} onChange={setTags} placeholder="Ketik tag lalu Enter..." />
+              <TagInput
+                value={tags}
+                onChange={setTags}
+                placeholder="Ketik tag lalu Enter..."
+              />
             </div>
 
             {/* Smart Suggestions & Duplicate Detection */}
-            {(suggestions.length > 0 || duplicates.length > 0) && (
+            {/* {(suggestions.length > 0 || duplicates.length > 0) && (
               <SuggestionBox
                 suggestions={suggestions}
                 duplicates={duplicates}
                 onSelectSuggestion={(categoryId) => setCategoryId(categoryId)}
               />
-            )}
+            )} */}
 
             {/* Recurrence Settings - Only for non-transfer transactions */}
             {type !== "TRANSFER" && (
