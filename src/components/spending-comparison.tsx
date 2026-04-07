@@ -44,7 +44,7 @@ export function SpendingComparison() {
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 mt-6">
-      <h3 className="mb-4 text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+      <h3 className="mb-4 text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2" suppressHydrationWarning>
         <span className="text-xl">📊</span>
         Perbandingan: {getMonthName(comparison.previousMonth)} vs {getMonthName(comparison.currentMonth)}
       </h3>

@@ -81,36 +81,6 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
           <Legend />
         </PieChart>
       </ResponsiveContainer>
-
-      {/* Category breakdown table */}
-      <div className="mt-6 space-y-2">
-        {data.map((item, index) => (
-          <div
-            key={item.categoryId}
-            className="flex items-center justify-between text-sm"
-          >
-            <div className="flex items-center gap-2">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: COLORS[index % COLORS.length] }}
-              />
-              <span className="text-zinc-700 dark:text-zinc-300">
-                {item.categoryIcon} {item.categoryName}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                {formatCurrency(item.spent)}
-              </span>
-              {item.budget && (
-                <span className="text-zinc-500 text-xs">
-                  {Math.round(item.percentage)}%
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

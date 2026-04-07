@@ -28,7 +28,7 @@ export function proxy(request: NextRequest) {
       return NextResponse.next();
     }
     // Cek session cookie untuk non-public API — early rejection sebelum masuk Node runtime
-    if (!session) {
+    if (!session?.value) {
       return NextResponse.json(
         { success: false, error: "Tidak terautentikasi" },
         { status: 401 }
@@ -52,7 +52,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Jalankan pada semua request kecuali resource statis
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.json).*)",
   ],
 };

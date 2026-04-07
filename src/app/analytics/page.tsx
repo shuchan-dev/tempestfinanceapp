@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR, { useSWRConfig } from "swr";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   BarChart3,
@@ -32,7 +32,7 @@ export default function AnalyticsPage() {
   const { data: merchantsRes, isLoading: l4, mutate: m4 } = useSWR<{ success: boolean; data: any[] }>("/api/analytics/merchants");
   const { data: budgetsRes, isLoading: l5, mutate: m5 } = useSWR<{ success: boolean; data: any[] }>("/api/analytics/budgets");
 
-  const isLoading = l1 || l2 || l3 || l4 || l5;
+  const rawLoading = l1 || l2 || l3 || l4 || l5;
   const mutate = () => { m1(); m2(); m3(); m4(); m5(); };
   const { data: categoriesRes } = useSWR<{ data: CategoryData[] }>(
     "/api/categories?type=EXPENSE",
@@ -43,6 +43,16 @@ export default function AnalyticsPage() {
   const [budgetAmount, setBudgetAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { mutate: globalMutate } = useSWRConfig();
+
+  // Client-only gate: prevent hydration mismatch from SWR cache + Date
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Force loading=true during SSR+hydration so server & client render the same skeleton
+  const isLoading = !mounted || rawLoading;
+  const daysPassed = mounted ? Math.max(new Date().getDate(), 1) : 1;
 
   const analytics = overviewRes ? {
     burnRate: overviewRes.data?.burnRate ?? 0,
@@ -124,6 +134,8 @@ export default function AnalyticsPage() {
       : "text-emerald-500"
     : "text-zinc-400";
 
+
+
   return (
     <PageContainer className="min-h-screen">
       {/* Header */}
@@ -156,7 +168,7 @@ export default function AnalyticsPage() {
                 <span className="text-sm font-normal text-zinc-400">/hari</span>
               </p>
               <p className="text-xs text-zinc-400 mt-1">
-                Berdasarkan {new Date().getDate()} hari yang sudah lewat bulan
+                Berdasarkan {daysPassed} hari yang sudah lewat bulan
                 ini
               </p>
             </>
@@ -375,7 +387,7 @@ export default function AnalyticsPage() {
 
       {/* ── Spending Comparison ─────────────────────────────────── */}
       <section className="space-y-3 pb-8">
-        <SpendingComparison />
+        {mounted && <SpendingComparison />}
       </section>
 
     </PageContainer>

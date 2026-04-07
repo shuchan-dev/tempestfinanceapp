@@ -323,7 +323,7 @@ export default function HistoryPage() {
                   }
                 }}
                 className={cn(
-                  "flex items-center justify-between rounded-2xl p-4 shadow-sm transition-all relative overflow-hidden",
+                  "flex items-center justify-between rounded-2xl p-4 shadow-sm transition-all relative",
                   isSelecting ? "cursor-pointer" : "",
                   isSelected
                     ? "bg-emerald-50 border-emerald-500 shadow-md ring-1 ring-emerald-500 dark:bg-emerald-900/20"
