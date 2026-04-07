@@ -31,8 +31,6 @@ import {
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import type { DebtData, DebtType, DebtPaymentData } from "@/types";
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
-
 export default function DebtsPage() {
   const [activeTab, setActiveTab] = useState<DebtType>("PIUTANG");
   const [showPaid, setShowPaid] = useState(false);
@@ -42,8 +40,7 @@ export default function DebtsPage() {
     isLoading,
     mutate,
   } = useSWR<{ data: DebtData[] }>(
-    `/api/debts?type=${activeTab}${showPaid ? "" : "&isPaid=false"}`,
-    fetcher,
+    `/api/debts?type=${activeTab}${showPaid ? "" : "&isPaid=false"}`
   );
   const debts = debtsRes?.data ?? [];
 

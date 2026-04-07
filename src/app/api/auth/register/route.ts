@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { logger } from "@/lib/logger";
+
 import {
   withAuthRateLimit,
   recordLoginFailure,
@@ -15,7 +17,7 @@ export async function POST(req: NextRequest) {
     const { name, pin } = await req.json();
 
     if (!name || !pin || pin.length !== 6 || !/^\d+$/.test(pin)) {
-      const failureCookies = recordLoginFailure();
+      const failureCookies = recordLoginFailure(req);
       const response = NextResponse.json(
         { success: false, error: "Nama dan PIN 6 digit angka wajib diisi" },
         { status: 400 },
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingUser) {
-      const failureCookies = recordLoginFailure();
+      const failureCookies = recordLoginFailure(req);
       const response = NextResponse.json(
         {
           success: false,
@@ -76,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("[POST /api/auth/register] Error:", error);
+    logger.error("[POST /api/auth/register] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mendaftarkan pengguna" },
       { status: 500 },

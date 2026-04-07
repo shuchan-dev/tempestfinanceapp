@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { signSession } from "@/lib/session-utils";
 import bcrypt from "bcryptjs";
+import { logger } from "@/lib/logger";
 import {
   withAuthRateLimit,
   recordLoginFailure,
@@ -30,12 +31,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const genericError = "Nama atau PIN tidak valid.";
+
     // 2. Jika nama tidak ada di database
     if (!user) {
-      const failureCookies = recordLoginFailure();
+      // Dummy compare to avoid timing attack
+      await bcrypt.compare(pin, "$2b$10$placeholder.hash.that.looks.real.abc");
+
+      const failureCookies = recordLoginFailure(req);
       const response = NextResponse.json(
-        { success: false, error: "Nama tidak ditemukan di sistem." },
-        { status: 404 },
+        { success: false, error: genericError },
+        { status: 401 },
       );
       response.headers.append("Set-Cookie", failureCookies.setCookieStart);
       response.headers.append("Set-Cookie", failureCookies.setCookieTime);
@@ -45,10 +51,10 @@ export async function POST(req: NextRequest) {
     // 3. Jika nama ada, cek apakah PIN-nya cocok menggunakan bcrypt
     const isPinValid = await bcrypt.compare(pin, user.pin);
     if (!isPinValid) {
-      const failureCookies = recordLoginFailure();
+      const failureCookies = recordLoginFailure(req);
       const response = NextResponse.json(
-        { success: false, error: "PIN yang Anda masukkan salah." },
-        { status: 401 }, // 401 Unauthorized
+        { success: false, error: genericError },
+        { status: 401 },
       );
       response.headers.append("Set-Cookie", failureCookies.setCookieStart);
       response.headers.append("Set-Cookie", failureCookies.setCookieTime);
@@ -91,7 +97,7 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("[POST /api/auth/login] Error:", error);
+    logger.error("[POST /api/auth/login] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal memulai sesi login" },
       { status: 500 },

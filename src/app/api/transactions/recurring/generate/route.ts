@@ -2,14 +2,18 @@
  * API Route: /api/transactions/recurring/generate
  *
  * POST — Generate instances for recurring transactions that are due today
- * This can be called from a cron job or on app startup
+ * This can be called from a cron job or on app startup.
+ * 
+ * Uses createTransaction from service layer to ensure proper Uang Goib handling.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
 import { getNextOccurrence, rruleToConfig } from "@/lib/recurrence-utils";
+import { createTransaction } from "@/services/transactionService";
 import type { ApiResponse } from "@/types";
+import { logger } from "@/lib/logger";
 
 export async function POST(
   req: NextRequest,
@@ -71,39 +75,25 @@ export async function POST(
 
       if (existingInstance) continue; // Already generated today
 
-      // Create instance
+      // Create instance using the service layer (handles Uang Goib properly)
       try {
-        await db.$transaction(async (tx) => {
-          await tx.transaction.create({
-            data: {
-              userId: userId!,
-              amount: parentTx.amount,
-              type: parentTx.type,
-              description: parentTx.description,
-              date: nextDate,
-              accountId: parentTx.accountId,
-              categoryId: parentTx.categoryId,
-              toAccountId: parentTx.toAccountId,
-              adminFee: parentTx.adminFee,
-              isRecurringInstance: true,
-              recurrenceParentId: parentTx.id,
-              isSynced: false,
-            },
-          });
-
-          if (parentTx.type === "EXPENSE") {
-            await tx.account.update({ where: { id: parentTx.accountId }, data: { balance: { decrement: parentTx.amount } } });
-          } else if (parentTx.type === "INCOME") {
-            await tx.account.update({ where: { id: parentTx.accountId }, data: { balance: { increment: parentTx.amount } } });
-          } else if (parentTx.type === "TRANSFER" && parentTx.toAccountId) {
-            await tx.account.update({ where: { id: parentTx.accountId }, data: { balance: { decrement: parentTx.amount + (parentTx.adminFee || 0) } } });
-            await tx.account.update({ where: { id: parentTx.toAccountId }, data: { balance: { increment: parentTx.amount } } });
-          }
+        await createTransaction(userId!, {
+          amount: parentTx.amount,
+          type: parentTx.type as "INCOME" | "EXPENSE" | "TRANSFER",
+          description: parentTx.description || undefined,
+          date: nextDate.toISOString(),
+          accountId: parentTx.accountId,
+          categoryId: parentTx.categoryId || undefined,
+          toAccountId: parentTx.toAccountId || undefined,
+          adminFee: parentTx.adminFee || undefined,
+          isRecurring: false,
+          isRecurringInstance: true,
+          recurrenceParentId: parentTx.id,
         });
 
         generatedCount++;
       } catch (err) {
-        console.error(
+        logger.error(
           `Failed to generate recurring instance for ${parentTx.id}:`,
           err,
         );
@@ -115,7 +105,7 @@ export async function POST(
       data: generatedCount,
     });
   } catch (error) {
-    console.error("[POST /api/transactions/recurring/generate] Error:", error);
+    logger.error("[POST /api/transactions/recurring/generate] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal membuat transaksi berulang" },
       { status: 500 },

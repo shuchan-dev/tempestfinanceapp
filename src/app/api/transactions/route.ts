@@ -11,12 +11,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { getPaginationParams } from "@/lib/pagination";
+import { validateNumber, validateEnum, sanitizeString } from "@/lib/validators";
 import type {
   CreateTransactionPayload,
   ApiResponse,
   TransactionData,
 } from "@/types";
 import { createTransaction } from "@/services/transactionService";
+import { logger } from "@/lib/logger";
 
 // ─── GET /api/transactions ────────────────────────────────────
 /**
@@ -32,8 +35,7 @@ export async function GET(
     if (error) return error;
 
     const { searchParams } = new URL(req.url);
-    const limit = Math.min(parseInt(searchParams.get("limit") ?? "20"), 100);
-    const page = Math.max(parseInt(searchParams.get("page") ?? "1"), 1);
+    const { limit, page, skip } = getPaginationParams(searchParams, 100, 20);
     const type = searchParams.get("type");
     const accountId = searchParams.get("accountId");
     const categoryId = searchParams.get("categoryId");
@@ -78,26 +80,30 @@ export async function GET(
         : {}),
     };
 
-    const transactions = await db.transaction.findMany({
-      where,
-      include: {
-        account: { select: { id: true, name: true, icon: true, color: true } },
-        category: { select: { id: true, name: true, icon: true } },
-        toAccount: {
-          select: { id: true, name: true, icon: true, color: true },
+    const [transactions, total] = await Promise.all([
+      db.transaction.findMany({
+        where,
+        include: {
+          account: { select: { id: true, name: true, icon: true, color: true } },
+          category: { select: { id: true, name: true, icon: true } },
+          toAccount: {
+            select: { id: true, name: true, icon: true, color: true },
+          },
         },
-      },
-      orderBy: { date: "desc" },
-      take: limit,
-      skip: (page - 1) * limit,
-    });
+        orderBy: { date: "desc" },
+        take: limit,
+        skip,
+      }),
+      db.transaction.count({ where }),
+    ]);
 
     return NextResponse.json({
       success: true,
       data: transactions as TransactionData[],
+      meta: { total, page, limit, hasMore: skip + limit < total },
     });
   } catch (error) {
-    console.error("[GET /api/transactions] Error:", error);
+    logger.error("[GET /api/transactions] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengambil data transaksi" },
       { status: 500 },
@@ -120,7 +126,7 @@ export async function POST(
     const body: CreateTransactionPayload = await req.json();
 
     // ── Validasi Input ─────────────────────────────────────
-    if (!body.amount || body.amount <= 0) {
+    if (!validateNumber(body.amount, 0.01)) {
       return NextResponse.json(
         { success: false, error: "Nominal harus lebih dari 0" },
         { status: 400 },
@@ -132,7 +138,7 @@ export async function POST(
         { status: 400 },
       );
     }
-    if (!["INCOME", "EXPENSE", "TRANSFER"].includes(body.type)) {
+    if (!validateEnum(body.type, ["INCOME", "EXPENSE", "TRANSFER"])) {
       return NextResponse.json(
         { success: false, error: "Tipe transaksi tidak valid" },
         { status: 400 },
@@ -149,6 +155,12 @@ export async function POST(
         { success: false, error: "Akun asal dan tujuan tidak boleh sama" },
         { status: 400 },
       );
+    }
+
+    // Sanitization
+    body.description = sanitizeString(body.description) || undefined;
+    if (body.tags) {
+       body.tags = sanitizeString(body.tags) || undefined;
     }
 
     // ── Validasi Kepemilikan Akun (Anti-IDOR) ──────────────
@@ -189,7 +201,7 @@ export async function POST(
       { status: 201 },
     );
   } catch (error) {
-    console.error("[POST /api/transactions] Error:", error);
+    logger.error("[POST /api/transactions] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal menyimpan transaksi" },
       { status: 500 },

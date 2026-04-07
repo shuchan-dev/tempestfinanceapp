@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { logger } from "@/lib/logger";
 
 // GET /api/notifications
 // Ambil daftar notifikasi untuk user aktif
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
       meta: { unreadCount },
     });
   } catch (error) {
-    console.error("[GET /api/notifications] Error:", error);
+    logger.error("[GET /api/notifications] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengambil notifikasi" },
       { status: 500 },
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    console.error("[POST /api/notifications] Error:", error);
+    logger.error("[POST /api/notifications] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal membuat notifikasi" },
       { status: 500 },
@@ -89,7 +90,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: true });
   } catch (error) {
-    console.error("[PATCH /api/notifications] Error:", error);
+    logger.error("[PATCH /api/notifications] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal update notifikasi" },
       { status: 500 },

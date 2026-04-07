@@ -12,14 +12,27 @@
 
 import { createHmac, timingSafeEqual } from "crypto";
 
-const SESSION_SECRET = process.env.SESSION_SECRET ?? "tempest-default-secret-change-in-prod";
+/**
+ * Lazy getter agar tidak throw saat build time (module evaluation).
+ * Throw hanya saat fungsi signSession/verifySession benar-benar dipanggil.
+ */
+function getSecret(): string {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error(
+      "FATAL: SESSION_SECRET environment variable is not set!\n" +
+      "Set SESSION_SECRET to a long random string in your .env file."
+    );
+  }
+  return secret;
+}
 
 /**
  * Sign userId menjadi session token yang aman.
  * Output: `"<userId>.<signature>"`
  */
 export function signSession(userId: string): string {
-  const sig = createHmac("sha256", SESSION_SECRET).update(userId).digest("hex");
+  const sig = createHmac("sha256", getSecret()).update(userId).digest("hex");
   return `${userId}.${sig}`;
 }
 
@@ -37,7 +50,7 @@ export function verifySession(token: string): string | null {
 
     if (!userId || !providedSig) return null;
 
-    const expectedSig = createHmac("sha256", SESSION_SECRET).update(userId).digest("hex");
+    const expectedSig = createHmac("sha256", getSecret()).update(userId).digest("hex");
 
     // Constant-time comparison mencegah timing attack
     const providedBuf = Buffer.from(providedSig, "hex");

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { logger } from "@/lib/logger";
 
 // GET /api/analytics/comparison?month=2026-04
 // Membandingkan bulan yang diminta dengan bulan sebelumnya
@@ -152,7 +153,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[GET /api/analytics/comparison] Error:", error);
+    logger.error("[GET /api/analytics/comparison] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengambil data perbandingan pengeluaran" },
       { status: 500 },

@@ -180,17 +180,17 @@ export function FilterButton({
                     Min Nominal
                   </label>
                   <Input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="0"
-                    value={tempFilters.amountMin || ""}
-                    onChange={(e) =>
+                    value={tempFilters.amountMin ? new Intl.NumberFormat("id-ID").format(tempFilters.amountMin) : ""}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/[^0-9]/g, "");
                       setTempFilters({
                         ...tempFilters,
-                        amountMin: e.target.value
-                          ? parseFloat(e.target.value)
-                          : undefined,
-                      })
-                    }
+                        amountMin: raw ? parseInt(raw) : undefined,
+                      });
+                    }}
                     className="h-9 text-sm"
                   />
                 </div>
@@ -199,17 +199,17 @@ export function FilterButton({
                     Max Nominal
                   </label>
                   <Input
-                    type="number"
-                    placeholder="999999999"
-                    value={tempFilters.amountMax || ""}
-                    onChange={(e) =>
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="999.999.999"
+                    value={tempFilters.amountMax ? new Intl.NumberFormat("id-ID").format(tempFilters.amountMax) : ""}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/[^0-9]/g, "");
                       setTempFilters({
                         ...tempFilters,
-                        amountMax: e.target.value
-                          ? parseFloat(e.target.value)
-                          : undefined,
-                      })
-                    }
+                        amountMax: raw ? parseInt(raw) : undefined,
+                      });
+                    }}
                     className="h-9 text-sm"
                   />
                 </div>

@@ -8,7 +8,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { validateNumber, sanitizeString } from "@/lib/validators";
 import type { CreateGoalPayload, ApiResponse, GoalData } from "@/types";
+import { logger } from "@/lib/logger";
 
 // ─── GET /api/goals ──────────────────────────────────────
 /**
@@ -42,7 +44,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, data: goalsWithDynamicAmount as unknown as GoalData[] });
   } catch (error) {
-    console.error("[GET /api/goals] Error:", error);
+    logger.error("[GET /api/goals] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengambil data goal" },
       { status: 500 },
@@ -70,7 +72,7 @@ export async function POST(
         { status: 400 },
       );
     }
-    if (!body.targetAmount || body.targetAmount <= 0) {
+    if (!validateNumber(body.targetAmount, 0.01)) {
       return NextResponse.json(
         { success: false, error: "Target amount harus lebih dari 0" },
         { status: 400 },
@@ -82,6 +84,9 @@ export async function POST(
         { status: 400 },
       );
     }
+
+    // Sanitize name
+    body.name = sanitizeString(body.name) || body.name.trim();
 
     // Validasi accountId jika diberikan
     if (body.accountId) {
@@ -118,7 +123,7 @@ export async function POST(
       { status: 201 },
     );
   } catch (error) {
-    console.error("[POST /api/goals] Error:", error);
+    logger.error("[POST /api/goals] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal membuat goal" },
       { status: 500 },

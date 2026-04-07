@@ -50,8 +50,8 @@ export default function Dashboard() {
   // Fetch analytics summary
   const { data: analyticsRes } = useSWR<{
     success: boolean;
-    data: AnalyticsData;
-  }>("/api/analytics");
+    data: any;
+  }>("/api/analytics/overview");
   const analytics = analyticsRes?.data;
 
   // Filter out dismissed alerts

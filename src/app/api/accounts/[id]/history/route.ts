@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
 import { eachDayOfInterval, format } from "date-fns";
+import { logger } from "@/lib/logger";
 
 // GET /api/accounts/:id/history?days=30
 export async function GET(
@@ -118,7 +119,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error(`[GET /api/accounts/[id]/history] Error:`, error);
+    logger.error(`[GET /api/accounts/[id]/history] Error:`, error);
     return NextResponse.json({ success: false, error: "Gagal mengambil riwayat saldo" }, { status: 500 });
   }
 }

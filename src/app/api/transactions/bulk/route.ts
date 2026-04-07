@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { logger } from "@/lib/logger";
 
 // POST /api/transactions/bulk
 // Body: { action: 'delete' | 'recategorize', transactionIds: string[], targetCategoryId?: string }
@@ -132,7 +133,7 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   } catch (error) {
-    console.error("[POST /api/transactions/bulk] Error:", error);
+    logger.error("[POST /api/transactions/bulk] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal memproses bulk action" },
       { status: 500 }

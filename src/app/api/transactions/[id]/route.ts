@@ -8,9 +8,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { checkOwnership } from "@/lib/ownership-check";
+import { updateTransaction, deleteTransaction } from "@/services/transactionService";
+import type { ExistingTransaction } from "@/services/transactionService";
 import type { ApiResponse, TransactionData } from "@/types";
+import { logger } from "@/lib/logger";
 
 // ─── PATCH /api/transactions/[id] ─────────────────────────────
 export async function PATCH(
@@ -33,19 +36,9 @@ export async function PATCH(
     const body = await req.json();
 
     // Validasi kepemilikan transaksi
-    const existingTx = await db.transaction.findFirst({
-      where: { id, userId: userId!, deletedAt: null },
-    });
-
-    if (!existingTx) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Transaksi tidak ditemukan atau sudah dihapus",
-        },
-        { status: 404 },
-      );
-    }
+    const { error: ownershipError, item: existingTxRaw } = await checkOwnership("transaction", id, userId!);
+    if (ownershipError || !existingTxRaw) return ownershipError || NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+    const existingTx = existingTxRaw as unknown as ExistingTransaction;
 
     if (body.type && body.type !== existingTx.type) {
       return NextResponse.json(
@@ -60,60 +53,21 @@ export async function PATCH(
       );
     }
 
-    // Prepare update data
-    const updateData: Record<string, unknown> = {};
-    const balanceUpdateQueries: any[] = [];
-
-    if (body.amount !== undefined) {
-      if (body.amount <= 0) {
-        return NextResponse.json(
-          { success: false, error: "Nominal harus lebih dari 0" },
-          { status: 400 },
-        );
-      }
-      
-      if (body.amount !== existingTx.amount) {
-        const diff = body.amount - existingTx.amount; // positive if increased
-        if (existingTx.type === "EXPENSE") {
-          balanceUpdateQueries.push(
-            db.account.update({ where: { id: existingTx.accountId }, data: { balance: { decrement: diff } } })
-          );
-        } else if (existingTx.type === "INCOME") {
-          balanceUpdateQueries.push(
-            db.account.update({ where: { id: existingTx.accountId }, data: { balance: { increment: diff } } })
-          );
-        }
-      }
-      updateData.amount = body.amount;
+    if (body.amount <= 0) {
+      return NextResponse.json(
+        { success: false, error: "Nominal harus lebih dari 0" },
+        { status: 400 },
+      );
     }
-    if (body.description !== undefined)
-      updateData.description = body.description;
-    if (body.categoryId !== undefined) updateData.categoryId = body.categoryId;
-    if (body.date !== undefined) updateData.date = new Date(body.date);
-    if (body.tags !== undefined) updateData.tags = body.tags || null;
 
-    // Update the transaction
-    const updateQuery = db.transaction.update({
-      where: { id },
-      data: updateData,
-      include: {
-        account: { select: { id: true, name: true, icon: true, color: true } },
-        category: { select: { id: true, name: true, icon: true } },
-        toAccount: {
-          select: { id: true, name: true, icon: true, color: true },
-        },
-      },
-    });
-
-    const results = await db.$transaction([...balanceUpdateQueries, updateQuery]);
-    const updated = results[results.length - 1];
+    const updated = await updateTransaction(userId!, id, body, existingTx);
 
     return NextResponse.json({
       success: true,
       data: updated as TransactionData,
     });
   } catch (error) {
-    console.error("[PATCH /api/transactions/:id] Error:", error);
+    logger.error("[PATCH /api/transactions/:id] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengupdate transaksi" },
       { status: 500 },
@@ -140,52 +94,15 @@ export async function DELETE(
     }
 
     // Validasi kepemilikan transaksi
-    const existingTx = await db.transaction.findFirst({
-      where: { id, userId: userId!, deletedAt: null },
-    });
+    const { error: ownershipError, item: existingTxRaw } = await checkOwnership("transaction", id, userId!);
+    if (ownershipError || !existingTxRaw) return ownershipError || NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+    const existingTx = existingTxRaw as unknown as ExistingTransaction;
 
-    if (!existingTx) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Transaksi tidak ditemukan atau sudah dihapus",
-        },
-        { status: 404 },
-      );
-    }
-
-    // Revert balances
-    const balanceUpdateQueries: any[] = [];
-    if (existingTx.type === "EXPENSE") {
-      balanceUpdateQueries.push(
-        db.account.update({ where: { id: existingTx.accountId }, data: { balance: { increment: existingTx.amount } } })
-      );
-    } else if (existingTx.type === "INCOME") {
-      balanceUpdateQueries.push(
-        db.account.update({ where: { id: existingTx.accountId }, data: { balance: { decrement: existingTx.amount } } })
-      );
-    } else if (existingTx.type === "TRANSFER") {
-      balanceUpdateQueries.push(
-        db.account.update({ where: { id: existingTx.accountId }, data: { balance: { increment: existingTx.amount + (existingTx.adminFee || 0) } } })
-      );
-      if (existingTx.toAccountId) {
-        balanceUpdateQueries.push(
-          db.account.update({ where: { id: existingTx.toAccountId }, data: { balance: { decrement: existingTx.amount } } })
-        );
-      }
-    }
-
-    // Soft delete
-    const deleteQuery = db.transaction.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
-
-    await db.$transaction([...balanceUpdateQueries, deleteQuery]);
+    await deleteTransaction(userId!, id, existingTx);
 
     return NextResponse.json({ success: true, data: true });
   } catch (error) {
-    console.error("[DELETE /api/transactions/:id] Error:", error);
+    logger.error("[DELETE /api/transactions/:id] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal menghapus transaksi" },
       { status: 500 },

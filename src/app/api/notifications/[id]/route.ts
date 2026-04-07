@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { logger } from "@/lib/logger";
 
 // PATCH /api/notifications/:id
 // Mark as read
@@ -29,7 +30,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
-    console.error("[PATCH /api/notifications/:id] Error:", error);
+    logger.error("[PATCH /api/notifications/:id] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal update notifikasi" },
       { status: 500 }
@@ -62,7 +63,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, data: true });
   } catch (error) {
-    console.error("[DELETE /api/notifications/:id] Error:", error);
+    logger.error("[DELETE /api/notifications/:id] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal menghapus notifikasi" },
       { status: 500 }

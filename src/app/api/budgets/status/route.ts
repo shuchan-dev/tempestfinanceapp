@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { resolveUserId } from "@/lib/api-utils";
 import { checkUserBudgets, type BudgetStatus } from "@/lib/budget-checker";
 import type { ApiResponse } from "@/types";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   req: NextRequest,
@@ -24,7 +25,7 @@ export async function GET(
       data: alerts,
     });
   } catch (error) {
-    console.error("[GET /api/budgets/status] Error:", error);
+    logger.error("[GET /api/budgets/status] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengambil status budget" },
       { status: 500 },

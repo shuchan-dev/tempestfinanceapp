@@ -26,11 +26,14 @@ import { formatCurrency } from "@/lib/utils";
 import type { AnalyticsData, CategoryData } from "@/types";
 
 export default function AnalyticsPage() {
-  const {
-    data: analyticsRes,
-    isLoading,
-    mutate,
-  } = useSWR<{ success: boolean; data: AnalyticsData }>("/api/analytics");
+  const { data: overviewRes, isLoading: l1, mutate: m1 } = useSWR<{ success: boolean; data: any }>("/api/analytics/overview");
+  const { data: cashflowRes, isLoading: l2, mutate: m2 } = useSWR<{ success: boolean; data: any[] }>("/api/analytics/cashflow");
+  const { data: categoriesStatRes, isLoading: l3, mutate: m3 } = useSWR<{ success: boolean; data: any[] }>("/api/analytics/categories");
+  const { data: merchantsRes, isLoading: l4, mutate: m4 } = useSWR<{ success: boolean; data: any[] }>("/api/analytics/merchants");
+  const { data: budgetsRes, isLoading: l5, mutate: m5 } = useSWR<{ success: boolean; data: any[] }>("/api/analytics/budgets");
+
+  const isLoading = l1 || l2 || l3 || l4 || l5;
+  const mutate = () => { m1(); m2(); m3(); m4(); m5(); };
   const { data: categoriesRes } = useSWR<{ data: CategoryData[] }>(
     "/api/categories?type=EXPENSE",
   );
@@ -41,7 +44,16 @@ export default function AnalyticsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { mutate: globalMutate } = useSWRConfig();
 
-  const analytics = analyticsRes?.data;
+  const analytics = overviewRes ? {
+    burnRate: overviewRes.data?.burnRate ?? 0,
+    totalExpenseThisMonth: overviewRes.data?.totalExpenseThisMonth ?? 0,
+    totalIncomeThisMonth: overviewRes.data?.totalIncomeThisMonth ?? 0,
+    netFlowThisMonth: overviewRes.data?.netFlowThisMonth ?? 0,
+    cashflow: cashflowRes?.data ?? [],
+    categorySpending: categoriesStatRes?.data ?? [],
+    topMerchants: merchantsRes?.data ?? [],
+    budgetProgress: budgetsRes?.data ?? [],
+  } : null;
   const categories = categoriesRes?.data ?? [];
 
   const handleBudgetAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {

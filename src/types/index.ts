@@ -165,6 +165,8 @@ export interface CreateTransactionPayload {
   recurrenceRule?: string;
   recurrenceEndDate?: string;
   tags?: string;
+  isRecurringInstance?: boolean;
+  recurrenceParentId?: string;
 }
 
 export interface CreateAccountPayload {

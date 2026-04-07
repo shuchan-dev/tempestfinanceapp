@@ -4,6 +4,7 @@ export function validateEnv() {
   const requiredVariables = [
     "TURSO_DATABASE_URL",
     "NEXTAUTH_SECRET",
+    "SESSION_SECRET",
   ];
 
   for (const envVar of requiredVariables) {

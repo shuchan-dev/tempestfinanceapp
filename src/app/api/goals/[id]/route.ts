@@ -8,7 +8,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { checkOwnership } from "@/lib/ownership-check";
 import type { UpdateGoalPayload, ApiResponse, GoalData } from "@/types";
+import { logger } from "@/lib/logger";
 
 // ─── PATCH /api/goals/[id] ───────────────────────────────
 /**
@@ -26,16 +28,8 @@ export async function PATCH(
     const body: UpdateGoalPayload = await req.json();
 
     // Verify goal ownership
-    const existingGoal = await db.goal.findFirst({
-      where: { id, userId: userId!, deletedAt: null },
-    });
-
-    if (!existingGoal) {
-      return NextResponse.json(
-        { success: false, error: "Goal tidak ditemukan atau bukan milik Anda" },
-        { status: 404 },
-      );
-    }
+    const { error: ownershipError, item: existingGoal } = await checkOwnership("goal", id, userId!);
+    if (ownershipError || !existingGoal) return ownershipError || NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
 
     // If updating accountId, verify ownership
     if (body.accountId) {
@@ -75,7 +69,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: updatedGoal as GoalData });
   } catch (error) {
-    console.error("[PATCH /api/goals/[id]] Error:", error);
+    logger.error("[PATCH /api/goals/[id]] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengupdate goal" },
       { status: 500 },
@@ -98,16 +92,8 @@ export async function DELETE(
     const { id } = await params;
 
     // Verify goal ownership
-    const existingGoal = await db.goal.findFirst({
-      where: { id, userId: userId!, deletedAt: null },
-    });
-
-    if (!existingGoal) {
-      return NextResponse.json(
-        { success: false, error: "Goal tidak ditemukan atau bukan milik Anda" },
-        { status: 404 },
-      );
-    }
+    const { error: ownershipError, item: existingGoal } = await checkOwnership("goal", id, userId!);
+    if (ownershipError || !existingGoal) return ownershipError || NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
 
     // Soft delete
     await db.goal.update({
@@ -117,7 +103,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, data: { id } });
   } catch (error) {
-    console.error("[DELETE /api/goals/[id]] Error:", error);
+    logger.error("[DELETE /api/goals/[id]] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal menghapus goal" },
       { status: 500 },

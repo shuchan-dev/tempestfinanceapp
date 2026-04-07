@@ -48,6 +48,8 @@ next-env.d.ts
 
 /generated/prisma
 
+tmp_replace.mjs
+
 #plan
 flow.md
 plan-fase1.md

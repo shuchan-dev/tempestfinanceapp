@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   req: NextRequest,
@@ -33,7 +34,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, data: upcomingDebts });
   } catch (error) {
-    console.error("[GET /api/debts/upcoming] Error:", error);
+    logger.error("[GET /api/debts/upcoming] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengambil data hutang jatuh tempo" },
       { status: 500 },

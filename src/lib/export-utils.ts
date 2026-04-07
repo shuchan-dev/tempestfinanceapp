@@ -212,6 +212,52 @@ export function exportToExcel(
 }
 
 /**
+ * Export transactions to PDF format
+ */
+export async function exportToPDF(
+  transactions: TransactionData[],
+  fileName: string = "transactions.pdf"
+): Promise<void> {
+  const jsPDFModule = await import("jspdf");
+  const autoTableModule = await import("jspdf-autotable");
+  const jsPDF = jsPDFModule.jsPDF;
+  const autoTable = autoTableModule.default;
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  
+  const DATE_FORMAT = new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const IDR = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
+
+  doc.setFontSize(18);
+  doc.setTextColor(16, 185, 129);
+  doc.text("Tempest Finance", 14, 18);
+  doc.setFontSize(10);
+  doc.setTextColor(113, 113, 122);
+  doc.text(`Laporan Transaksi — ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}`, 14, 26);
+
+  const tableData = transactions.map((tx) => [
+    DATE_FORMAT.format(new Date(tx.date)),
+    tx.type,
+    tx.type === "TRANSFER" ? "Transfer" : (tx.category?.name ?? "Tanpa Kategori"),
+    (tx.account?.name ?? "") + (tx.toAccount ? ` -> ${tx.toAccount.name}` : ""),
+    IDR.format(tx.amount),
+    tx.adminFee && tx.adminFee > 0 ? IDR.format(tx.adminFee) : "-",
+    tx.description ?? "-",
+  ]);
+
+  autoTable(doc, {
+    startY: 32,
+    head: [["Tanggal", "Tipe", "Kategori", "Akun", "Nominal", "Admin", "Catatan"]],
+    body: tableData,
+    styles: { fontSize: 8, cellPadding: 2 },
+    headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    columnStyles: { 0: { cellWidth: 20 }, 1: { cellWidth: 18 }, 4: { halign: "right" }, 5: { halign: "right" } },
+  });
+
+  doc.save(fileName);
+}
+
+/**
  * Helper to trigger file download
  */
 function downloadFile(
@@ -234,7 +280,7 @@ function downloadFile(
  * Generate default export file name with current date
  */
 export function getExportFileName(
-  format: "csv" | "json" | "qif" | "ofx" | "xlsx",
+  format: "csv" | "json" | "qif" | "ofx" | "xlsx" | "pdf",
 ): string {
   const date = new Date().toLocaleDateString("id-ID").replace(/\//g, "-");
   const ext =
@@ -244,6 +290,7 @@ export function getExportFileName(
       qif: "qif",
       ofx: "ofx",
       xlsx: "xlsx",
+      pdf: "pdf",
     }[format] || format;
   return `transactions_${date}.${ext}`;
 }

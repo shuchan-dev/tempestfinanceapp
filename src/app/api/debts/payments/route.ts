@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { checkOwnership } from "@/lib/ownership-check";
 import type { ApiResponse, CreateDebtPaymentPayload, DebtPaymentData } from "@/types";
+import { logger } from "@/lib/logger";
 
 // ─── POST /api/debts/payments ──────────────────────────────────────
 export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<DebtPaymentData>>> {
@@ -24,16 +26,9 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<D
       );
     }
 
-    const debt = await db.debt.findFirst({
-      where: { id: body.debtId, userId: userId! },
-    });
-
-    if (!debt) {
-      return NextResponse.json(
-        { success: false, error: "Catatan tidak ditemukan" },
-        { status: 404 }
-      );
-    }
+    const { error: ownershipError, item: debtRaw } = await checkOwnership("debt", body.debtId, userId!);
+    if (ownershipError || !debtRaw) return ownershipError || NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+    const debt = debtRaw as any;
 
     // Hitung total sisa pembayaran menggunakan query database
     const paymentAgg = await db.debtPayment.aggregate({
@@ -77,7 +72,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<D
       { status: 201 }
     );
   } catch (err) {
-    console.error("[POST /api/debts/payments] Error:", err);
+    logger.error("[POST /api/debts/payments] Error:", err);
     return NextResponse.json(
       { success: false, error: "Gagal menyimpan pembayaran" },
       { status: 500 }
@@ -100,6 +95,9 @@ export async function DELETE(req: NextRequest): Promise<NextResponse<ApiResponse
         { status: 400 }
       );
     }
+
+    const { error: ownershipError } = await checkOwnership("debtPayment", id, userId!);
+    if (ownershipError) return ownershipError;
 
     const payment = await db.debtPayment.findFirst({
       where: { id, userId: userId! },
@@ -133,7 +131,7 @@ export async function DELETE(req: NextRequest): Promise<NextResponse<ApiResponse
 
     return NextResponse.json({ success: true, data: true });
   } catch (err) {
-    console.error("[DELETE /api/debts/payments] Error:", err);
+    logger.error("[DELETE /api/debts/payments] Error:", err);
     return NextResponse.json(
       { success: false, error: "Gagal menghapus pembayaran" },
       { status: 500 }

@@ -9,7 +9,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { checkOwnership } from "@/lib/ownership-check";
+import { validateNumber } from "@/lib/validators";
 import type { ApiResponse, BudgetData, CreateBudgetPayload } from "@/types";
+import { logger } from "@/lib/logger";
 
 // ─── GET /api/budgets ─────────────────────────────────────────
 export async function GET(): Promise<NextResponse<ApiResponse<BudgetData[]>>> {
@@ -32,38 +35,41 @@ export async function GET(): Promise<NextResponse<ApiResponse<BudgetData[]>>> {
     startOfWeek.setDate(now.getDate() - day);
     startOfWeek.setHours(0, 0, 0, 0);
 
-    const budgetsWithCalc = await Promise.all(
-      budgets.map(async (b) => {
-        const dateFilter =
-          b.period === "WEEKLY"
-            ? { gte: startOfWeek }
-            : { gte: firstDayOfMonth };
+    const categoryIds = budgets.map((b) => b.categoryId);
+    
+    // As per MVP note, treating mostly as MONTHLY
+    const spendingByCategory = await db.transaction.groupBy({
+      by: ["categoryId"],
+      where: {
+        userId: userId!,
+        type: "EXPENSE",
+        deletedAt: null,
+        categoryId: { in: categoryIds },
+        date: { gte: firstDayOfMonth }, 
+      },
+      _sum: { amount: true },
+    });
 
-        const transactions = await db.transaction.aggregate({
-          _sum: { amount: true },
-          where: {
-            userId: userId!,
-            categoryId: b.categoryId,
-            type: "EXPENSE",
-            date: dateFilter,
-          },
-        });
-        const spent = transactions._sum.amount ?? 0;
-        return {
-          ...b,
-          spent,
-          remaining: b.amount - spent,
-          percentage: Math.min(100, Math.round((spent / b.amount) * 100)),
-        };
-      }),
+    const spentMap = new Map(
+      spendingByCategory.map((s) => [s.categoryId, s._sum.amount ?? 0])
     );
+
+    const budgetsWithCalc = budgets.map((b) => {
+      const spent = spentMap.get(b.categoryId) ?? 0;
+      return {
+        ...b,
+        spent,
+        remaining: b.amount - spent,
+        percentage: Math.min(100, Math.round((spent / b.amount) * 100)),
+      };
+    });
 
     return NextResponse.json({
       success: true,
       data: budgetsWithCalc as unknown as BudgetData[],
     });
   } catch (error) {
-    console.error("[GET /api/budgets] Error:", error);
+    logger.error("[GET /api/budgets] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengambil data budget" },
       { status: 500 },
@@ -87,7 +93,7 @@ export async function POST(
         { status: 400 },
       );
     }
-    if (!body.amount || body.amount <= 0) {
+    if (!validateNumber(body.amount, 0.01)) {
       return NextResponse.json(
         { success: false, error: "Nominal budget harus lebih dari 0" },
         { status: 400 },
@@ -129,7 +135,7 @@ export async function POST(
       { status: 201 },
     );
   } catch (error) {
-    console.error("[POST /api/budgets] Error:", error);
+    logger.error("[POST /api/budgets] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal menyimpan budget" },
       { status: 500 },
@@ -155,20 +161,13 @@ export async function DELETE(
       );
     }
 
-    const budget = await db.budget.findFirst({
-      where: { id, userId: userId! },
-    });
-    if (!budget) {
-      return NextResponse.json(
-        { success: false, error: "Budget tidak ditemukan" },
-        { status: 404 },
-      );
-    }
+    const { error: ownershipError } = await checkOwnership("budget", id, userId!);
+    if (ownershipError) return ownershipError;
 
     await db.budget.update({ where: { id }, data: { deletedAt: new Date() } });
     return NextResponse.json({ success: true, data: true });
   } catch (error) {
-    console.error("[DELETE /api/budgets] Error:", error);
+    logger.error("[DELETE /api/budgets] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal menghapus budget" },
       { status: 500 },

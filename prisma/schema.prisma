@@ -16,8 +16,8 @@ datasource db {
 // ============================================================
 model User {
   id         String    @id @default(cuid())
-  name       String
-  pin        String    @unique
+  name       String    @unique
+  pin        String
   isApproved Boolean   @default(false)
   createdAt  DateTime  @default(now())
   deletedAt  DateTime?
@@ -60,6 +60,8 @@ model Account {
   transfersIn  Transaction[] @relation("TransferTo")
   goals        Goal[]
   quickAdds    QuickAdd[]
+
+  @@index([userId, deletedAt])
 }
 
 // ============================================================
@@ -86,6 +88,9 @@ model Category {
   transactions Transaction[]
   budgets      Budget[]
   quickAdds    QuickAdd[]
+
+  @@index([userId, deletedAt])
+  @@index([userId, type])
 }
 
 // ============================================================
@@ -122,6 +127,12 @@ model Transaction {
   recurrenceEndDate   DateTime?
   recurrenceParentId  String? // Link to original recurring tx
   isRecurringInstance Boolean   @default(false)
+
+  @@index([userId, date])
+  @@index([userId, type, date])
+  @@index([userId, categoryId, date])
+  @@index([userId, accountId, date])
+  @@index([userId, deletedAt])
 }
 
 // ============================================================
@@ -170,6 +181,9 @@ model Debt {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  @@index([userId, type, isPaid])
+  @@index([userId, dueDate])
 }
 
 // ============================================================
@@ -212,6 +226,8 @@ model Goal {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  @@index([userId, deletedAt])
 }
 
 // ============================================================

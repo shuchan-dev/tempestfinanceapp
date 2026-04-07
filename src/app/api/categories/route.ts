@@ -11,7 +11,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { validateString, validateEnum, sanitizeString } from "@/lib/validators";
 import type { ApiResponse, CategoryData } from "@/types";
+import { logger } from "@/lib/logger";
 // ─── GET /api/categories ──────────────────────────────────────
 export async function GET(
   req: NextRequest,
@@ -51,7 +53,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, data: categories as unknown as CategoryData[] });
   } catch (error) {
-    console.error("[GET /api/categories] Error:", error);
+    logger.error("[GET /api/categories] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengambil kategori" },
       { status: 500 },
@@ -70,18 +72,21 @@ export async function POST(
     const body: { name: string; type: string; icon?: string; parentId?: string } =
       await req.json();
 
-    if (!body.name?.trim()) {
+    if (!validateString(body.name, 1)) {
       return NextResponse.json(
         { success: false, error: "Nama kategori tidak boleh kosong" },
         { status: 400 },
       );
     }
-    if (!["INCOME", "EXPENSE"].includes(body.type)) {
+    if (!validateEnum(body.type, ["INCOME", "EXPENSE"])) {
       return NextResponse.json(
         { success: false, error: "Tipe kategori harus INCOME atau EXPENSE" },
         { status: 400 },
       );
     }
+
+    // Sanitization
+    body.name = sanitizeString(body.name)!;
 
     // Jika ada parentId, validasi bahwa parent milik user yang sama
     if (body.parentId) {
@@ -140,7 +145,7 @@ export async function POST(
       { status: 201 },
     );
   } catch (error) {
-    console.error("[POST /api/categories] Error:", error);
+    logger.error("[POST /api/categories] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal membuat kategori" },
       { status: 500 },
@@ -188,7 +193,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: updated as unknown as CategoryData });
   } catch (error) {
-    console.error("[PATCH /api/categories] Error:", error);
+    logger.error("[PATCH /api/categories] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengupdate kategori" },
       { status: 500 },
@@ -250,7 +255,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, data: true });
   } catch (error) {
-    console.error("[DELETE /api/categories] Error:", error);
+    logger.error("[DELETE /api/categories] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal menghapus kategori" },
       { status: 500 },

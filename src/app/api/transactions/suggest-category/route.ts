@@ -9,6 +9,7 @@ import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
 import { suggestCategories, detectDuplicates } from "@/lib/suggestion-utils";
 import type { ApiResponse } from "@/types";
+import { logger } from "@/lib/logger";
 
 interface SuggestionResponse {
   suggestions: Array<{
@@ -135,7 +136,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("[GET /api/transactions/suggest-category] Error:", error);
+    logger.error("[GET /api/transactions/suggest-category] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal membuat saran kategori" },
       { status: 500 },

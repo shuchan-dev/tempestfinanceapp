@@ -19,6 +19,7 @@ import {
   exportToQIF,
   exportToOFX,
   exportToExcel,
+  exportToPDF,
   getExportFileName,
 } from "@/lib/export-utils";
 import type { TransactionData } from "@/types";
@@ -30,7 +31,7 @@ interface ExportButtonProps {
 export function ExportButton({ transactions }: ExportButtonProps) {
   const [open, setOpen] = useState(false);
 
-  const handleExport = (format: "csv" | "json" | "qif" | "ofx" | "xlsx") => {
+  const handleExport = async (format: "csv" | "json" | "qif" | "ofx" | "xlsx" | "pdf") => {
     try {
       const fileName = getExportFileName(format);
 
@@ -44,6 +45,8 @@ export function ExportButton({ transactions }: ExportButtonProps) {
         exportToOFX(transactions, fileName);
       } else if (format === "xlsx") {
         exportToExcel(transactions, fileName);
+      } else if (format === "pdf") {
+        await exportToPDF(transactions, fileName);
       }
 
       toast.success(
@@ -136,6 +139,18 @@ export function ExportButton({ transactions }: ExportButtonProps) {
               Excel
             </h3>
             <p className="text-xs text-zinc-500 mt-1">Formatted Report</p>
+          </button>
+
+          {/* PDF Export */}
+          <button
+            onClick={() => handleExport("pdf")}
+            className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-zinc-200 dark:border-zinc-800 hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+          >
+            <span className="text-3xl mb-2">📑</span>
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              PDF
+            </h3>
+            <p className="text-xs text-zinc-500 mt-1">Document</p>
           </button>
         </div>
       </DialogContent>

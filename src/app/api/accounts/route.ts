@@ -11,8 +11,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveUserId } from "@/lib/api-utils";
+import { validateString, validateNumber, sanitizeString } from "@/lib/validators";
+import { checkOwnership } from "@/lib/ownership-check";
 import type { CreateAccountPayload, ApiResponse, AccountData } from "@/types";
 import { Prisma } from "@/generated/prisma/client";
+import { logger } from "@/lib/logger";
 
 // ─── GET /api/accounts ────────────────────────────────────────
 /** Mengambil seluruh akun milik user yang sedang login. */
@@ -29,7 +32,7 @@ export async function GET(): Promise<NextResponse<ApiResponse<AccountData[]>>> {
 
     return NextResponse.json({ success: true, data: accounts });
   } catch (error) {
-    console.error("[GET /api/accounts] Error:", error);
+    logger.error("[GET /api/accounts] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal mengambil data akun" },
       { status: 500 },
@@ -48,7 +51,7 @@ export async function POST(
 
     const body: CreateAccountPayload = await req.json();
 
-    if (!body.name?.trim()) {
+    if (!validateString(body.name, 1)) {
       return NextResponse.json(
         { success: false, error: "Nama akun tidak boleh kosong" },
         { status: 400 },
@@ -56,12 +59,15 @@ export async function POST(
     }
 
     // Validasi balance tidak boleh negatif
-    if (body.balance !== undefined && body.balance < 0) {
+    if (body.balance !== undefined && !validateNumber(body.balance, 0)) {
       return NextResponse.json(
         { success: false, error: "Saldo tidak boleh negatif" },
         { status: 400 },
       );
     }
+
+    // Sanitization
+    body.name = sanitizeString(body.name)!;
 
     const account = await db.$transaction(
       async (tx: Prisma.TransactionClient) => {
@@ -102,7 +108,7 @@ export async function POST(
       { status: 201 },
     );
   } catch (error) {
-    console.error("[POST /api/accounts] Error:", error);
+    logger.error("[POST /api/accounts] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal membuat akun baru" },
       { status: 500 },
@@ -130,33 +136,33 @@ export async function DELETE(
     }
 
     // Pastikan akun ini milik user aktif (mencegah IDOR attack)
-    const account = await db.account.findFirst({
-      where: { id, userId: userId! },
-      include: { children: true },
+    const { error: ownershipError, item: account } = await checkOwnership("account", id, userId!);
+    if (ownershipError || !account) return ownershipError || NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+    
+    // Include children manually as checkOwnership doesn't include it
+    const accountWithChildren = await db.account.findUnique({
+      where: { id },
+      include: { children: true }
     });
-
-    if (!account) {
-      return NextResponse.json(
-        { success: false, error: "Akun tidak ditemukan" },
-        { status: 404 },
-      );
+    
+    if (!accountWithChildren) {
+       return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
-    let totalBalance = account.balance;
-    let totalUangGoib = account.uangGoib;
-    if (account.children) {
-      for (const child of account.children) {
+    let totalBalance = accountWithChildren.balance;
+    let totalUangGoib = accountWithChildren.uangGoib;
+    if (accountWithChildren.children) {
+      for (const child of accountWithChildren.children) {
         totalBalance += child.balance;
         totalUangGoib += child.uangGoib;
       }
     }
 
-    if (totalBalance !== 0 || totalBalance < 0) {
+    if (totalBalance !== 0) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "Gagal: Total saldo akun induk dan kantong harus 0 sebelum dihapus!",
+          error: `Gagal: Total saldo harus 0 sebelum menghapus akun. Saat ini: ${totalBalance}`,
         },
         { status: 400 },
       );
@@ -173,9 +179,9 @@ export async function DELETE(
     }
 
     const idsToDelete = [
-      account.id,
+      accountWithChildren.id,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...(account.children?.map((c: any) => c.id) || []),
+      ...(accountWithChildren.children?.map((c: any) => c.id) || []),
     ];
 
     await db.$transaction(
@@ -200,7 +206,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, data: true });
   } catch (error) {
-    console.error("[DELETE /api/accounts] Error:", error);
+    logger.error("[DELETE /api/accounts] Error:", error);
     return NextResponse.json(
       { success: false, error: "Gagal menghapus akun" },
       { status: 500 },

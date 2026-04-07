@@ -56,16 +56,19 @@ export function withAuthRateLimit(
  * Record failed login attempt via cookies
  * Returns Set-Cookie headers to increment failure counter
  */
-export function recordLoginFailure(): {
+export function recordLoginFailure(req: NextRequest): {
   setCookieStart: string;
   setCookieTime: string;
 } {
+  const cookieHeader = req.headers.get("cookie") || "";
+  const currentAttempts = getCookieFailedAttempts(cookieHeader);
+  const newAttempts = currentAttempts + 1;
   const now = Date.now();
   const maxAge = 15 * 60; // 15 minutes
 
   return {
-    setCookieStart: `login_failed_attempts=1; Path=/; Max-Age=${maxAge}; HttpOnly=false`,
-    setCookieTime: `login_failed_at=${now}; Path=/; Max-Age=${maxAge}; HttpOnly=false`,
+    setCookieStart: `login_failed_attempts=${newAttempts}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Lax`,
+    setCookieTime: `login_failed_at=${now}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Lax`,
   };
 }
 

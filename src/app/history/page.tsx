@@ -33,6 +33,7 @@ import {
   cn,
 } from "@/lib/utils";
 import type { TransactionData } from "@/types";
+import { Button } from "@/components/ui/button";
 
 type ViewMode = "list" | "calendar";
 
@@ -43,6 +44,8 @@ export default function HistoryPage() {
   const [selectedDay, setSelectedDay] = useState<Date | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({});
+  const [page, setPage] = useState(1);
+  const limit = view === "list" ? 50 : 500;
   const [editingTransaction, setEditingTransaction] =
     useState<TransactionData | null>(null);
 
@@ -53,7 +56,8 @@ export default function HistoryPage() {
   // Build query string from filters and search
   const buildQueryString = () => {
     const params = new URLSearchParams();
-    params.append("limit", "200"); // Higher limit for full history
+    params.append("limit", limit.toString());
+    params.append("page", page.toString());
     if (searchQuery) params.append("search", searchQuery);
     if (filters.type) params.append("type", filters.type);
     if (filters.categoryId) params.append("categoryId", filters.categoryId);
@@ -147,6 +151,7 @@ export default function HistoryPage() {
             onClick={() => {
               setView("list");
               setSelectedDay(undefined);
+              setPage(1);
             }}
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition-all",
@@ -158,7 +163,10 @@ export default function HistoryPage() {
             <List className="w-4 h-4" /> List
           </button>
           <button
-            onClick={() => setView("calendar")}
+            onClick={() => {
+              setView("calendar");
+              setPage(1);
+            }}
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition-all",
               view === "calendar"
@@ -185,8 +193,8 @@ export default function HistoryPage() {
               }}
               className={cn(
                 "text-sm font-medium px-3 py-1.5 rounded-lg transition-colors border",
-                isSelecting 
-                  ? "bg-zinc-100 text-zinc-900 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700" 
+                isSelecting
+                  ? "bg-zinc-100 text-zinc-900 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700"
                   : "bg-transparent text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-900/50 dark:hover:bg-emerald-900/20"
               )}
             >
@@ -212,7 +220,7 @@ export default function HistoryPage() {
         {(filters as any).tag && (
           <div className="flex items-center gap-2 mt-2">
             <span className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded-md flex items-center gap-1 dark:bg-indigo-900/50 dark:text-indigo-300">
-              #{ (filters as any).tag }
+              #{(filters as any).tag}
               <button onClick={() => {
                 const newFilters = { ...filters };
                 delete (newFilters as any).tag;
@@ -317,8 +325,8 @@ export default function HistoryPage() {
                 className={cn(
                   "flex items-center justify-between rounded-2xl p-4 shadow-sm transition-all relative overflow-hidden",
                   isSelecting ? "cursor-pointer" : "",
-                  isSelected 
-                    ? "bg-emerald-50 border-emerald-500 shadow-md ring-1 ring-emerald-500 dark:bg-emerald-900/20" 
+                  isSelected
+                    ? "bg-emerald-50 border-emerald-500 shadow-md ring-1 ring-emerald-500 dark:bg-emerald-900/20"
                     : "bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800"
                 )}
               >
@@ -342,84 +350,107 @@ export default function HistoryPage() {
                     </div>
                   )}
                   <div className="flex flex-col">
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm leading-tight flex items-center gap-1.5">
-                    <span>
-                      {tx.type === "TRANSFER"
-                        ? "Transfer Saldo"
-                        : tx.category?.name || "Tanpa Kategori"}
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm leading-tight flex items-center gap-1.5">
+                      <span>
+                        {tx.type === "TRANSFER"
+                          ? "Transfer Saldo"
+                          : tx.category?.name || "Tanpa Kategori"}
+                      </span>
+                      {(tx.isRecurring || tx.isRecurringInstance) && (
+                        <span className="text-[10px] bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 px-1.5 rounded-sm" title="Recurring Transaction">
+                          🔄
+                        </span>
+                      )}
                     </span>
-                    {(tx.isRecurring || tx.isRecurringInstance) && (
-                      <span className="text-[10px] bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 px-1.5 rounded-sm" title="Recurring Transaction">
-                        🔄 
+                    <span className="text-xs font-medium text-zinc-500 leading-tight mt-0.5">
+                      {tx.account?.name}
+                      {tx.toAccount ? ` → ${tx.toAccount.name}` : ""}
+                    </span>
+                    <span className="text-[10px] text-zinc-400 mt-0.5 font-medium">
+                      {formatRelativeDate(tx.date)}
+                    </span>
+                    {tx.tags && (
+                      <div className="flex gap-1 flex-wrap mt-1">
+                        {tx.tags.split(",").map((tag) => (
+                          <span
+                            key={tag}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFilters({ ...filters, tag: tag.trim() } as any);
+                            }}
+                            className="text-[9px] px-1.5 py-0.5 cursor-pointer rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 font-medium hover:opacity-80"
+                          >
+                            #{tag.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right */}
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex flex-col items-end gap-1">
+                    <span
+                      className={`font-bold tracking-tight ${getTransactionColor(tx.type)}`}
+                    >
+                      {getTransactionSign(tx.type)} {formatCurrency(tx.amount)}
+                    </span>
+
+                    {tx.type === "TRANSFER" && tx.adminFee && tx.adminFee > 0 && (
+                      <span className="text-[10px] font-semibold text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded-full">
+                        + Admin {formatCurrency(tx.adminFee)}
                       </span>
                     )}
-                  </span>
-                  <span className="text-xs font-medium text-zinc-500 leading-tight mt-0.5">
-                    {tx.account?.name}
-                    {tx.toAccount ? ` → ${tx.toAccount.name}` : ""}
-                  </span>
-                  <span className="text-[10px] text-zinc-400 mt-0.5 font-medium">
-                    {formatRelativeDate(tx.date)}
-                  </span>
-                  {tx.tags && (
-                    <div className="flex gap-1 flex-wrap mt-1">
-                      {tx.tags.split(",").map((tag) => (
-                        <span
-                          key={tag}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFilters({ ...filters, tag: tag.trim() } as any);
-                          }}
-                          className="text-[9px] px-1.5 py-0.5 cursor-pointer rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 font-medium hover:opacity-80"
-                        >
-                          #{tag.trim()}
-                        </span>
-                      ))}
-                    </div>
+
+                    {tx.description && (
+                      <span
+                        className="text-[10px] text-zinc-400 max-w-27.5 truncate"
+                        title={tx.description}
+                      >
+                        {tx.description}
+                      </span>
+                    )}
+
+                    <span className="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-800 mt-0.5">
+                      {tx.isSynced ? "✅ Synced" : "⏳ Pending"}
+                    </span>
+                  </div>
+
+                  {/* Actions Menu */}
+                  {!isSelecting && (
+                    <TransactionActionsMenu
+                      transactionId={tx.id}
+                      onEdit={() => setEditingTransaction(tx)}
+                    />
                   )}
                 </div>
               </div>
-
-              {/* Right */}
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="flex flex-col items-end gap-1">
-                  <span
-                    className={`font-bold tracking-tight ${getTransactionColor(tx.type)}`}
-                  >
-                    {getTransactionSign(tx.type)} {formatCurrency(tx.amount)}
-                  </span>
-
-                  {tx.type === "TRANSFER" && tx.adminFee && tx.adminFee > 0 && (
-                    <span className="text-[10px] font-semibold text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded-full">
-                      + Admin {formatCurrency(tx.adminFee)}
-                    </span>
-                  )}
-
-                  {tx.description && (
-                    <span
-                      className="text-[10px] text-zinc-400 max-w-27.5 truncate"
-                      title={tx.description}
-                    >
-                      {tx.description}
-                    </span>
-                  )}
-
-                  <span className="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-800 mt-0.5">
-                    {tx.isSynced ? "✅ Synced" : "⏳ Pending"}
-                  </span>
-                </div>
-
-                {/* Actions Menu */}
-                {!isSelecting && (
-                  <TransactionActionsMenu
-                    transactionId={tx.id}
-                    onEdit={() => setEditingTransaction(tx)}
-                  />
-                )}
-              </div>
-            </div>
             );
           })
+        )}
+
+        {/* Pagination Controls */}
+        {!isLoading && view === "list" && (
+          <div className="flex items-center justify-center gap-4 mt-6 mb-4">
+            <Button
+              variant="outline"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="rounded-xl px-6"
+            >
+              Sebelumnya
+            </Button>
+            <span className="text-sm font-medium text-zinc-500">Hal {page}</span>
+            <Button
+              variant="outline"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={displayedTransactions.length < limit}
+              className="rounded-xl px-6"
+            >
+              Selanjutnya
+            </Button>
+          </div>
         )}
       </div>
 
@@ -436,7 +467,7 @@ export default function HistoryPage() {
           );
         }}
       />
-      
+
       {/* Bulk Action Menu */}
       {isSelecting && selectedIds.length > 0 && (
         <BulkActionMenu
